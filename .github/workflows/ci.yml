@@ -56,27 +56,6 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Clean old caches
-        shell: bash
-        run: |
-          caches=$(gh cache list --key "rust-check-${{ runner.os }}-" --json id --jq '.[].id' 2>/dev/null || true)
-          for id in $caches; do
-            gh cache delete "$id" 2>/dev/null || true
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Restore Rust cache
-        uses: actions/cache@v5
-        with:
-          path: |
-            tauri/target
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: rust-check-${{ runner.os }}-${{ hashFiles('tauri/Cargo.lock', 'tauri/Cargo.toml') }}
-          restore-keys: |
-            rust-check-${{ runner.os }}-
-
       - name: Check Rust compilation
         working-directory: tauri
         run: cargo check --release

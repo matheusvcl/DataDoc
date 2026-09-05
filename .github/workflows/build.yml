@@ -59,6 +59,17 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: List old caches
+        id: old-caches
+        shell: bash
+        run: |
+          OLD_KEY="rust-check-${{ runner.os }}-"
+          caches=$(gh cache list --key "$OLD_KEY" --json id --jq '.[].id' 2>/dev/null || true)
+          echo "$caches" > /tmp/old_cache_ids.txt
+          echo "Found $(echo "$caches" | grep -c . || echo 0) old caches"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Restore Rust cache
         uses: actions/cache@v5
         with:
@@ -73,6 +84,19 @@ jobs:
       - name: Check Rust compilation
         working-directory: tauri
         run: cargo check --release
+
+      - name: Clean old caches
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/old_cache_ids.txt ]; then
+            while IFS= read -r id; do
+              [ -z "$id" ] && continue
+              gh cache delete "$id" 2>/dev/null || true
+            done < /tmp/old_cache_ids.txt
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify tauri config
         run: |
@@ -120,6 +144,17 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: List old caches
+        id: old-caches
+        shell: bash
+        run: |
+          OLD_KEY="rust-${{ runner.os }}-"
+          caches=$(gh cache list --key "$OLD_KEY" --json id --jq '.[].id' 2>/dev/null || true)
+          echo "$caches" > /tmp/old_cache_ids.txt
+          echo "Found $(echo "$caches" | grep -c . || echo 0) old caches"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Restore Rust cache
         uses: actions/cache@v5
@@ -199,3 +234,16 @@ jobs:
             tauri/target/release/bundle/nsis/*.exe
             tauri/target/release/bundle/msi/*.msi
           retention-days: 30
+
+      - name: Clean old caches
+        if: always()
+        shell: bash
+        run: |
+          if [ -f /tmp/old_cache_ids.txt ]; then
+            while IFS= read -r id; do
+              [ -z "$id" ] && continue
+              gh cache delete "$id" 2>/dev/null || true
+            done < /tmp/old_cache_ids.txt
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

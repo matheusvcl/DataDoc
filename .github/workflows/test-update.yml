@@ -143,7 +143,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin dev
-          git checkout dev
+          git checkout -B dev origin/dev
           cp latest.json ./latest.json
           git add latest.json
           git diff --cached --quiet && echo "No changes" && exit 0

@@ -59,17 +59,6 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: List old caches
-        id: old-caches
-        shell: bash
-        run: |
-          OLD_KEY="rust-check-${{ runner.os }}-"
-          caches=$(gh cache list --key "$OLD_KEY" --json id --jq '.[].id' 2>/dev/null || true)
-          echo "$caches" > /tmp/old_cache_ids.txt
-          echo "Found $(echo "$caches" | grep -c . || echo 0) old caches"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Restore Rust cache
         uses: actions/cache@v5
         with:
@@ -77,9 +66,9 @@ jobs:
             tauri/target
             ~/.cargo/registry
             ~/.cargo/git
-          key: rust-check-${{ runner.os }}-${{ hashFiles('tauri/Cargo.lock', 'tauri/Cargo.toml') }}
+          key: rust-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
-            rust-check-${{ runner.os }}-
+            rust-${{ runner.os }}-
 
       - name: Check Rust compilation
         working-directory: tauri
@@ -89,12 +78,12 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [ -f /tmp/old_cache_ids.txt ]; then
-            while IFS= read -r id; do
-              [ -z "$id" ] && continue
-              gh cache delete "$id" 2>/dev/null || true
-            done < /tmp/old_cache_ids.txt
-          fi
+          CURRENT="rust-${{ runner.os }}-${{ github.run_id }}"
+          gh cache list --key "rust-${{ runner.os }}-" --json id --jq '.[].id' | while read -r id; do
+            [ "$id" = "$CURRENT" ] && continue
+            gh cache delete "$id" 2>/dev/null || true
+          done
+          echo "Old caches cleaned, kept $CURRENT"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -145,17 +134,6 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: List old caches
-        id: old-caches
-        shell: bash
-        run: |
-          OLD_KEY="rust-${{ runner.os }}-"
-          caches=$(gh cache list --key "$OLD_KEY" --json id --jq '.[].id' 2>/dev/null || true)
-          echo "$caches" > /tmp/old_cache_ids.txt
-          echo "Found $(echo "$caches" | grep -c . || echo 0) old caches"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Restore Rust cache
         uses: actions/cache@v5
         with:
@@ -163,7 +141,7 @@ jobs:
             tauri/target
             ~/.cargo/registry
             ~/.cargo/git
-          key: rust-${{ runner.os }}-${{ hashFiles('tauri/Cargo.lock', 'tauri/Cargo.toml') }}
+          key: rust-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
             rust-${{ runner.os }}-
 
@@ -306,7 +284,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git fetch origin dev
-          git checkout dev
+          git checkout -B dev origin/dev
           cp latest.json ./latest.json
           git add latest.json
           git diff --cached --quiet && echo "No changes" && exit 0
@@ -328,11 +306,11 @@ jobs:
         if: always()
         shell: bash
         run: |
-          if [ -f /tmp/old_cache_ids.txt ]; then
-            while IFS= read -r id; do
-              [ -z "$id" ] && continue
-              gh cache delete "$id" 2>/dev/null || true
-            done < /tmp/old_cache_ids.txt
-          fi
+          CURRENT="rust-${{ runner.os }}-${{ github.run_id }}"
+          gh cache list --key "rust-${{ runner.os }}-" --json id --jq '.[].id' | while read -r id; do
+            [ "$id" = "$CURRENT" ] && continue
+            gh cache delete "$id" 2>/dev/null || true
+          done
+          echo "Old caches cleaned, kept $CURRENT"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -69,6 +69,32 @@ jobs:
             **Não instale em produção.**
           releaseDraft: false
           prerelease: true
+          updaterJsonPreferNsis: true
+
+      - name: Push latest.json to dev branch
+        shell: bash
+        run: |
+          gh release download "v${{ inputs.test_version }}" \
+            --pattern "latest.json" \
+            --dir /tmp/updater \
+            --repo "${{ github.repository }}"
+          
+          if [ ! -f /tmp/updater/latest.json ]; then
+            echo "::warning::latest.json not found in release, skipping push"
+            exit 0
+          fi
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin dev
+          git checkout dev
+          cp /tmp/updater/latest.json ./latest.json
+          git add latest.json
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "chore: atualizar latest.json para v${{ inputs.test_version }}"
+          git push origin dev
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload test installer
         uses: actions/upload-artifact@v6
@@ -92,7 +118,7 @@ jobs:
 
       - name: Check latest.json endpoint
         run: |
-          URL="https://github.com/DevVicolli/DataDoc/releases/latest/download/latest.json"
+          URL="https://raw.githubusercontent.com/matheusvcl/DataDoc/dev/latest.json"
           echo "Checking: $URL"
 
           HTTP_CODE=$(curl -s -o /tmp/latest.json -w "%{http_code}" -L "$URL")
@@ -111,9 +137,14 @@ jobs:
           # Validate JSON structure
           node -e "
             const data = require('/tmp/latest.json');
-            const platform = data.platforms && data.platforms['windows-x86_64-msi'];
+            const platform = data.platforms && (
+              data.platforms['windows-x86_64-nsis'] ||
+              data.platforms['windows-x86_64'] ||
+              data.platforms['windows-x86_64-msi']
+            );
             if (!platform) {
-              console.error('Missing windows-x86_64-msi platform');
+              console.error('Missing windows platform in latest.json');
+              console.error('Available platforms:', Object.keys(data.platforms || {}));
               process.exit(1);
             }
             console.log('Version:', data.version);
@@ -128,7 +159,7 @@ jobs:
       - name: Verify installer was signed
         run: |
           echo "Checking release assets..."
-          RELEASE_URL="https://api.github.com/repos/DevVicolli/DataDoc/releases/tags/v${{ inputs.test_version }}"
+          RELEASE_URL="https://api.github.com/repos/matheusvcl/DataDoc/releases/tags/v${{ inputs.test_version }}"
           echo "Fetching: $RELEASE_URL"
 
           ASSETS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "$RELEASE_URL" | node -e "
@@ -148,7 +179,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Versão de teste: \`${{ inputs.test_version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- latest.json: verificado" >> $GITHUB_STEP_SUMMARY
-          echo "- Endpoint: \`https://github.com/DevVicolli/DataDoc/releases/latest/download/latest.json\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Endpoint: \`https://raw.githubusercontent.com/matheusvcl/DataDoc/dev/latest.json\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Próximos passos" >> $GITHUB_STEP_SUMMARY
           echo "1. Baixe o instalador de teste nos artifacts" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,11 @@
+{
+  "version": "0.1.8-beta",
+  "notes": "Correções e melhorias no sistema de atualização.",
+  "pub_date": "2026-09-05T19:58:33Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReXYwZThSd3I0eWtxVXFFSUJZY3JaKzdpQWVpU1M0S1pqMHIzeGdiN1JuOWhYaXpoUmNRc3lLY25jZjBMVkl6elA5Q2RRakpnU3RpNjIxd3d6M3dod1dNM3dpTSsxb2d3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NjM4MjY3CWZpbGU6RGF0YURvY18wLjEuOC1iZXRhX3g2NC1zZXR1cC5leGUKN2lJNTFCS2JOeHBUQlAwQllIQUgxTFZHMGMxaUh3Q2hkQy90TGRBUUs2d2pLNFg1Ri9FdjhkZjFiVmZzZVcxbnRKUHdnUGhmQVJiRGlXWkM2SjBxQlE9PQo=",
+      "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.1.8-beta/DataDoc_0.1.8-beta_x64-setup.exe"
+    }
+  }
+}

@@ -225,6 +225,37 @@ jobs:
           releaseBody: ${{ steps.changelog.outputs.notes }}
           releaseDraft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
+          updaterJsonPreferNsis: true
+
+      - name: Push latest.json to dev branch
+        shell: bash
+        run: |
+          # Download latest.json from the release
+          gh release download "${{ github.ref_name }}" \
+            --pattern "latest.json" \
+            --dir /tmp/updater \
+            --repo "${{ github.repository }}"
+          
+          if [ ! -f /tmp/updater/latest.json ]; then
+            echo "::warning::latest.json not found in release, skipping push"
+            exit 0
+          fi
+          
+          echo "=== latest.json content ==="
+          cat /tmp/updater/latest.json
+          
+          # Push to dev branch
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin dev
+          git checkout dev
+          cp /tmp/updater/latest.json ./latest.json
+          git add latest.json
+          git diff --cached --quiet && echo "No changes" && exit 0
+          git commit -m "chore: atualizar latest.json para ${{ github.ref_name }}"
+          git push origin dev
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "DataDoc",
+  "version": "0.1.0-beta",
+  "identifier": "com.datadoc.app",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:4000"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "DataDoc",
+        "decorations": false,
+        "width": 1280,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "center": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "publisher": "DataDoc",
+    "copyright": "© DataDoc",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "embedBootstrapper"
+      },
+      "nsis": {
+        "languages": ["PortugueseBR"]
+      }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/matheusvcl/DataDoc/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENBRjgwQTQ3QkM0N0JGMzIKUldReXYwZThSd3I0eW9jVXI5Y0FCWDk3Vk1nMzRmNUk0TFpjdGRxRGxiWmhTK0gxeDRXL2xwVE0K"
+    }
+  }
+}

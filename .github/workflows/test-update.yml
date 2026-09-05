@@ -1,0 +1,157 @@
+name: Test Update System
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_version:
+        description: 'Version to test (e.g. 0.0.9-test)'
+        required: true
+        default: '0.0.9-test'
+
+permissions:
+  contents: write
+
+jobs:
+  build-test:
+    name: Build Test Release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './tauri -> target'
+
+      - name: Set test version
+        shell: bash
+        run: |
+          node -e "
+            const fs = require('fs');
+            const conf = JSON.parse(fs.readFileSync('tauri/tauri.conf.json', 'utf8'));
+            conf.version = '${{ inputs.test_version }}';
+            fs.writeFileSync('tauri/tauri.conf.json', JSON.stringify(conf, null, 2) + '\n');
+            console.log('Version set to:', conf.version);
+          "
+
+      - name: Prepare frontend
+        shell: bash
+        run: |
+          mkdir -p dist
+          cp index.html dist/
+          cp -r css dist/
+          cp -r js dist/
+          cp favicon.png dist/
+          if [ -d assets ]; then cp -r assets dist/; fi
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        with:
+          tagName: v${{ inputs.test_version }}
+          releaseName: 'DataDoc v${{ inputs.test_version }} (Teste)'
+          releaseBody: |
+            ## Teste de Atualização
+
+            Esta é uma release de teste para validar o sistema de atualização.
+
+            **Não instale em produção.**
+          releaseDraft: false
+          prerelease: true
+
+      - name: Upload test installer
+        uses: actions/upload-artifact@v5
+        with:
+          name: datadoc-test-installer
+          path: tauri/target/release/bundle/nsis/*.exe
+          retention-days: 7
+
+  verify-updater:
+    name: Verify Updater Files
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for release propagation
+        run: sleep 10
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Check latest.json endpoint
+        run: |
+          URL="https://github.com/DevVicolli/DataDoc/releases/latest/download/latest.json"
+          echo "Checking: $URL"
+
+          HTTP_CODE=$(curl -s -o /tmp/latest.json -w "%{http_code}" -L "$URL")
+          echo "HTTP Status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::latest.json not accessible (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+
+          echo ""
+          echo "=== latest.json content ==="
+          cat /tmp/latest.json
+          echo ""
+
+          # Validate JSON structure
+          node -e "
+            const data = require('/tmp/latest.json');
+            const platform = data.platforms && data.platforms['windows-x86_64-msi'];
+            if (!platform) {
+              console.error('Missing windows-x86_64-msi platform');
+              process.exit(1);
+            }
+            console.log('Version:', data.version);
+            console.log('Notes:', data.notes);
+            console.log('URL:', platform.url);
+            console.log('Signature:', platform.signature ? platform.signature.substring(0, 40) + '...' : 'MISSING');
+            if (!platform.signature) process.exit(1);
+            console.log('');
+            console.log('Updater files OK!');
+          "
+
+      - name: Verify installer was signed
+        run: |
+          echo "Checking release assets..."
+          RELEASE_URL="https://api.github.com/repos/DevVicolli/DataDoc/releases/tags/v${{ inputs.test_version }}"
+          echo "Fetching: $RELEASE_URL"
+
+          ASSETS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "$RELEASE_URL" | node -e "
+            const data = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8'));
+            if (data.assets) {
+              data.assets.forEach(a => {
+                console.log(a.name, '-', (a.size / 1024 / 1024).toFixed(1) + 'MB');
+              });
+            }
+            if (data.message) console.log('API:', data.message);
+          ")
+          echo "$ASSETS"
+
+      - name: Summary
+        run: |
+          echo "## Teste de Atualização - Resultado" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Versão de teste: \`${{ inputs.test_version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- latest.json: verificado" >> $GITHUB_STEP_SUMMARY
+          echo "- Endpoint: \`https://github.com/DevVicolli/DataDoc/releases/latest/download/latest.json\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Próximos passos" >> $GITHUB_STEP_SUMMARY
+          echo "1. Baixe o instalador de teste nos artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "2. Instale o app" >> $GITHUB_STEP_SUMMARY
+          echo "3. Abra o app e vá em Configurações > Verificar Atualizações" >> $GITHUB_STEP_SUMMARY
+          echo "4. Deve aparecer o dialog de atualização" >> $GITHUB_STEP_SUMMARY

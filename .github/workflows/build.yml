@@ -59,16 +59,6 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Clean old caches
-        shell: bash
-        run: |
-          caches=$(gh cache list --key "rust-check-${{ runner.os }}-" --json id --jq '.[].id' 2>/dev/null || true)
-          for id in $caches; do
-            gh cache delete "$id" 2>/dev/null || true
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Restore Rust cache
         uses: actions/cache@v5
         with:
@@ -131,16 +121,6 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Clean old caches
-        shell: bash
-        run: |
-          caches=$(gh cache list --key "rust-${{ runner.os }}-" --json id --jq '.[].id' 2>/dev/null || true)
-          for id in $caches; do
-            gh cache delete "$id" 2>/dev/null || true
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Restore Rust cache
         uses: actions/cache@v5
         with:
@@ -179,11 +159,11 @@ jobs:
           
           # Extract changelog — try with v prefix first, then without
           if [ -n "$FILE" ]; then
-            NOTES=$(sed -n "/^## \[$VERSION\]/,/^## \[/p" "$FILE" | sed '$d' | tail -n +2)
+            NOTES=$(sed -n "/^## \[$VERSION\]/,/^## \[/p" "$FILE" | sed '1d;/^## \[/d' | sed '/^$/N;/^\n$/d')
             if [ -z "$NOTES" ]; then
               # Strip v and retry
               VERSION_NO_V="${VERSION#v}"
-              NOTES=$(sed -n "/^## \[$VERSION_NO_V\]/,/^## \[/p" "$FILE" | sed '$d' | tail -n +2)
+              NOTES=$(sed -n "/^## \[$VERSION_NO_V\]/,/^## \[/p" "$FILE" | sed '1d;/^## \[/d' | sed '/^$/N;/^\n$/d')
               VERSION="$VERSION_NO_V"
             fi
             if [ -z "$NOTES" ]; then

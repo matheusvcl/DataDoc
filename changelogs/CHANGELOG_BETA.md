@@ -1,5 +1,5 @@
-## [v0.1.6-beta] - 05/09/2026
+## [v0.1.7-beta] - 05/09/2026
 
 ### Corrigido
 
-- Changelog agora busca do branch correto (dev para beta, main para stable)
+- Changelog extraída corretamente para a release (sed command corrigido)

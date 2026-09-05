@@ -28,7 +28,8 @@ function SettingsScreen({ showToast }) {
       // Determine which changelog to fetch based on version
       const isBeta = appVersion.includes('beta') || appVersion.includes('alpha') || appVersion.includes('rc');
       const changelogFile = isBeta ? 'CHANGELOG_BETA.md' : 'CHANGELOG.md';
-      const response = await fetch(`https://raw.githubusercontent.com/matheusvcl/DataDoc/main/changelogs/${changelogFile}`);
+      const branch = isBeta ? 'dev' : 'main';
+      const response = await fetch(`https://raw.githubusercontent.com/matheusvcl/DataDoc/${branch}/changelogs/${changelogFile}`);
       if (response.ok) {
         const text = await response.text();
         setChangelog(text);

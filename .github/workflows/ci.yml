@@ -56,6 +56,16 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Clean old caches
+        shell: bash
+        run: |
+          caches=$(gh cache list --key "rust-check-${{ runner.os }}-" --json id --jq '.[].id' 2>/dev/null || true)
+          for id in $caches; do
+            gh cache delete "$id" 2>/dev/null || true
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Restore Rust cache
         uses: actions/cache@v5
         with:

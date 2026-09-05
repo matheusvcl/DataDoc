@@ -87,7 +87,7 @@ function ExportScreen({ onBack, showToast }) {
           <div className="form-group full-width">
             <div className="export-format-grid">
               {[
-                { id: 'json', label: 'JSON', desc: 'Backup completo (clientes + empresa)' },
+                { id: 'json', label: 'JSON', desc: 'Array de objetos com campos: nome, cpf, telefone, email, cidade, estado, etc.' },
                 { id: 'csv', label: 'CSV', desc: 'Planilha, separado por ponto e vírgula' },
                 { id: 'txt', label: 'TXT', desc: 'Texto simples, separado por tab' }
               ].map(f => (

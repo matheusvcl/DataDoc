@@ -104,7 +104,6 @@ function OnboardingFlow({ onComplete }) {
   const steps = [
     // Step 0: Welcome
     <div key="welcome" className="onboarding-step">
-      <div className="onboarding-icon">{Icons.layers}</div>
       <h2 className="onboarding-title">Bem-vindo ao DataDoc</h2>
       <p className="onboarding-desc">Gerencie cadastros e documentos de forma simples e organizada. Vamos configurar sua conta em poucos passos.</p>
       <div className="onboarding-features">
@@ -118,7 +117,6 @@ function OnboardingFlow({ onComplete }) {
 
     // Step 1: Empresa
     <div key="empresa" className="onboarding-step">
-      <div className="onboarding-icon">{Icons.building}</div>
       <h2 className="onboarding-title">Dados da Empresa</h2>
       <p className="onboarding-desc">Configure os dados da sua empresa. Eles aparecerão nos documentos gerados.</p>
       <div className="onboarding-step-scroll">
@@ -183,7 +181,6 @@ function OnboardingFlow({ onComplete }) {
 
     // Step 2: Import
     <div key="import" className="onboarding-step">
-      <div className="onboarding-icon">{Icons.upload}</div>
       <h2 className="onboarding-title">Importar Dados</h2>
       <p className="onboarding-desc">Já tem dados? Importe de um arquivo JSON, CSV ou TXT. Ou pule para começar do zero.</p>
       <div className="import-area">

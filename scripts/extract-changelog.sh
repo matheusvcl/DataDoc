@@ -19,9 +19,9 @@ fi
 
 if [ -n "$VERSION" ]; then
   # Try matching with v prefix first, then without
-  NOTES=$(sed -n "/^## \[v$VERSION\]/,/^## \[/p" "$CHANGELOG" | sed '$d' | tail -n +2)
+  NOTES=$(sed -n "/^## \[$VERSION\]/,/^## \[/p" "$CHANGELOG" | sed '1d;/^## \[/d' | sed '/^$/N;/^\n$/d')
   if [ -z "$NOTES" ]; then
-    NOTES=$(sed -n "/^## \[$VERSION\]/,/^## \[/p" "$CHANGELOG" | sed '$d' | tail -n +2)
+    NOTES=$(sed -n "/^## \[v$VERSION\]/,/^## \[/p" "$CHANGELOG" | sed '1d;/^## \[/d' | sed '/^$/N;/^\n$/d')
   fi
   if [ -z "$NOTES" ]; then
     echo "Sem notas de release para $VERSION"
@@ -30,5 +30,5 @@ if [ -n "$VERSION" ]; then
   echo "$NOTES"
 else
   # Extract latest version section (first ## [x.x.x] block)
-  sed -n '/^## \[/,/^## \[/p' "$CHANGELOG" | sed '$d' | tail -n +2
+  sed -n '/^## \[/,/^## \[/p' "$CHANGELOG" | sed '1d;/^## \[/d' | sed '/^$/N;/^\n$/d'
 fi

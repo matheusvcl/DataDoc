@@ -187,4 +187,7 @@ function App() {
   );
 }
 
+// Desabilitar menu de contexto do navegador
+document.addEventListener('contextmenu', e => e.preventDefault());
+
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);

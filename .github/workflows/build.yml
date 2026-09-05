@@ -227,6 +227,11 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
           updaterJsonPreferNsis: true
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
       - name: Generate and upload latest.json
         shell: bash
         run: |
@@ -239,7 +244,7 @@ jobs:
           echo "Installer: $INSTALLER"
           
           # Sign the installer to get the updater signature
-          pnpm dlx @tauri-apps/cli signer sign \
+          npx @tauri-apps/cli@latest signer sign \
             -p "" \
             "$INSTALLER"
           

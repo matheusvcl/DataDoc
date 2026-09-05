@@ -1,0 +1,11 @@
+{
+  "version": "0.1.91-beta",
+  "notes": "Corrigido endpoint do updater e geracao automatica de latest.json.",
+  "pub_date": "2026-09-05T21:00:00Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "placeholder",
+      "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.1.91-beta/DataDoc_0.1.91-beta_x64-setup.exe"
+    }
+  }
+}

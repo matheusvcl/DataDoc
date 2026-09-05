@@ -120,10 +120,10 @@ function CadastroScreen({ onPreview, onGoEmpresa, editData, onClearEdit, showToa
         <div className="form-grid" data-od-id="cadastro-form">
           <div className="form-group full-width">
             <div className="person-type-toggle" role="radiogroup" aria-label="Tipo de pessoa">
-              <button type="button" className={`person-type-btn${!isPJ ? ' active' : ''}`} onClick={() => { setForm(f => ({ ...f, tipoPessoa: 'pf', cpf: '' })); setErrors(er => ({ ...er, nome: null, cpf: null })); }} role="radio" aria-checked={!isPJ}>
+              <button type="button" className={`person-type-btn${!isPJ ? ' active' : ''}`} onClick={() => { setForm(f => ({ ...f, tipoPessoa: 'pf', cpf: '' })); setErrors(er => ({ ...er, nome: null, cpf: null, telefone: null })); }} role="radio" aria-checked={!isPJ}>
                 Pessoa Física
               </button>
-              <button type="button" className={`person-type-btn${isPJ ? ' active' : ''}`} onClick={() => { setForm(f => ({ ...f, tipoPessoa: 'pj', cpf: '' })); setErrors(er => ({ ...er, nome: null, cpf: null })); }} role="radio" aria-checked={isPJ}>
+              <button type="button" className={`person-type-btn${isPJ ? ' active' : ''}`} onClick={() => { setForm(f => ({ ...f, tipoPessoa: 'pj', cpf: '' })); setErrors(er => ({ ...er, nome: null, cpf: null, telefone: null })); }} role="radio" aria-checked={isPJ}>
                 Pessoa Jurídica
               </button>
             </div>

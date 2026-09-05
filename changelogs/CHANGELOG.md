@@ -1,10 +1,7 @@
-# Changelog
-
-Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
-
-## [0.1.0] - 03/09/2026
+## [v0.1.2] - 05/09/2026
 
 ### Adicionado
+
 - Cadastro de clientes com busca por nome/CPF/CNPJ/telefone
 - Preview de documentos em tempo real
 - Exportação para PDF
@@ -16,3 +13,4 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 - Sistema de changelog para releases
 - Visualização do changelog nas configurações do app
 - CI/CD com validação antes do build
+

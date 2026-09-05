@@ -1,10 +1,7 @@
-# Changelog Beta
-
-Versões beta, alpha e release candidate (RC) do DataDoc.
-
-## [0.1.0-beta] - 03/09/2026
+## [v0.1.2-beta] - 05/09/2026
 
 ### Adicionado
+
 - Cadastro de clientes com busca por nome/CPF/CNPJ/telefone
 - Preview de documentos em tempo real
 - Exportação para PDF
@@ -17,5 +14,16 @@ Versões beta, alpha e release candidate (RC) do DataDoc.
 - Visualização do changelog nas configurações do app
 - CI/CD com validação antes do build
 
-### Nota
-Esta é uma versão beta para testes. A versão estável 0.1.0 será lançada após validação.
+### Corrigido
+
+- Limpeza de erro de telefone ao trocar entre Pessoa Física e Jurídica
+- Identifier do Tauri atualizado para com.datadoc.desktop (evita conflito macOS)
+- Caminho do changelog no CI/CD corrigido (changelogs/ com 's')
+- Changelog agora detecta beta/alpha/rc e usa CHANGELOG_BETA.md
+
+### Alterado
+
+- Largura do card do onboarding aumentada (480px / 780px)
+- Largura do form-grid aumentada (720px → 840px)
+- Descrição JSON no exportar dados atualizada
+- Ícones removidos dos steps do onboarding

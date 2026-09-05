@@ -78,7 +78,7 @@ jobs:
         run: |
           node -e "
             const conf = require('./tauri/tauri.conf.json');
-            if (conf.identifier !== 'com.datadoc.app') throw new Error('Bad identifier');
+            if (conf.identifier !== 'com.datadoc.desktop') throw new Error('Bad identifier');
             if (!conf.plugins.updater) throw new Error('Updater plugin missing');
             if (!conf.plugins.updater.pubkey) throw new Error('Updater pubkey missing');
             console.log('Tauri config OK:', conf.productName, conf.version);
@@ -147,12 +147,25 @@ jobs:
         shell: bash
         run: |
           VERSION="${{ github.ref_name }}"
-          # Remove 'v' prefix if present
-          VERSION="${VERSION#v}"
           
-          # Extract changelog for this version
-          if [ -f changelog/CHANGELOG.md ]; then
-            NOTES=$(sed -n "/^## \[$VERSION\]/,/^## \[/p" changelog/CHANGELOG.md | sed '$d' | tail -n +2)
+          # Pick changelog file: beta/alpha/rc tags use CHANGELOG_BETA.md
+          if echo "$VERSION" | grep -qE '(beta|alpha|rc)' && [ -f changelogs/CHANGELOG_BETA.md ]; then
+            FILE="changelogs/CHANGELOG_BETA.md"
+          elif [ -f changelogs/CHANGELOG.md ]; then
+            FILE="changelogs/CHANGELOG.md"
+          else
+            FILE=""
+          fi
+          
+          # Extract changelog — try with v prefix first, then without
+          if [ -n "$FILE" ]; then
+            NOTES=$(sed -n "/^## \[$VERSION\]/,/^## \[/p" "$FILE" | sed '$d' | tail -n +2)
+            if [ -z "$NOTES" ]; then
+              # Strip v and retry
+              VERSION_NO_V="${VERSION#v}"
+              NOTES=$(sed -n "/^## \[$VERSION_NO_V\]/,/^## \[/p" "$FILE" | sed '$d' | tail -n +2)
+              VERSION="$VERSION_NO_V"
+            fi
             if [ -z "$NOTES" ]; then
               NOTES="Sem notas de release disponíveis."
             fi

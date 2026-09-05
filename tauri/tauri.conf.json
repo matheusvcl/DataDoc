@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "DataDoc",
-  "version": "0.1.1-beta",
-  "identifier": "com.datadoc.app",
+  "version": "0.1.2-beta",
+  "identifier": "com.datadoc.desktop",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:4000"

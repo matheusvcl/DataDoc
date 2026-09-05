@@ -142,9 +142,10 @@ jobs:
           
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          cp latest.json "$RUNNER_TEMP/latest.json"
           git fetch origin dev
-          git checkout dev
-          cp latest.json ./latest.json
+          git checkout -B dev origin/dev
+          cp "$RUNNER_TEMP/latest.json" latest.json
           git add latest.json
           git diff --cached --quiet && echo "No changes" && exit 0
           git commit -m "chore: atualizar latest.json para v${{ inputs.test_version }}"

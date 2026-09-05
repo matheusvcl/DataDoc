@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-frontend:
+    name: Frontend Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Validate HTML structure
+        run: |
+          grep -q '<div id="root">' index.html
+          grep -q 'type="text/babel"' index.html
+          echo "HTML structure OK"
+
+      - name: Check JS syntax
+        run: |
+          for f in js/*.js; do
+            node --check "$f" 2>/dev/null || echo "WARN: $f has Babel/JSX (expected)"
+          done
+          echo "JS files present: $(ls js/*.js | wc -l)"
+
+      - name: Validate CSS variables
+        run: |
+          grep -q ':root' css/variables.css
+          echo "CSS variables file OK"
+
+  check-tauri:
+    name: Tauri Check
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Restore Rust cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            tauri/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: rust-check-${{ runner.os }}-${{ hashFiles('tauri/Cargo.lock', 'tauri/Cargo.toml') }}
+          restore-keys: |
+            rust-check-${{ runner.os }}-
+
+      - name: Check Rust compilation
+        working-directory: tauri
+        run: cargo check --release
+
+      - name: Verify tauri config
+        run: |
+          node -e "
+            const conf = require('./tauri/tauri.conf.json');
+            if (conf.identifier !== 'com.datadoc.app') throw new Error('Bad identifier');
+            if (!conf.plugins.updater) throw new Error('Updater plugin missing');
+            if (!conf.plugins.updater.pubkey) throw new Error('Updater pubkey missing');
+            console.log('Tauri config OK:', conf.productName, conf.version);
+          "
+
+  build-frontend:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Prepare dist
+        run: |
+          mkdir -p dist
+          cp index.html dist/
+          cp -r css dist/
+          cp -r js dist/
+          cp favicon.png dist/
+          if [ -d assets ]; then cp -r assets dist/; fi
+
+      - name: Verify dist
+        run: |
+          test -f dist/index.html
+          test -f dist/js/app.js
+          test -f dist/js/update.js
+          test -f dist/css/variables.css
+          echo "dist/ structure OK"
+          find dist -type f | wc -l
+          echo "files in dist"

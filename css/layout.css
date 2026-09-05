@@ -1,0 +1,148 @@
+/* Main content */
+.main-content {
+  flex: 1;
+  overflow: hidden auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  min-width: 0;
+}
+
+.page-header {
+  padding: 24px 32px 12px;
+  flex-shrink: 0;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--fg);
+  line-height: 1.25;
+}
+
+.page-subtitle {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.page-body {
+  padding: 8px 32px 40px;
+  flex: 1;
+  min-width: 0;
+}
+
+.page-header > *,
+.page-body > * {
+  max-width: 880px;
+  width: 100%;
+}
+
+.header-with-back {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-back {
+  padding: 0 10px;
+  flex-shrink: 0;
+}
+
+.client-context {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding: 10px 14px;
+  background: var(--accent-subtle);
+  border-radius: var(--radius);
+  font-size: 13.5px;
+}
+
+.client-context-label {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.client-context-name {
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.client-context-doc {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.historico-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.cell-date {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.table-scroll {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.table-empty-note {
+  text-align: center;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.actions-cell {
+  width: 110px;
+}
+
+.import-result {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--success-subtle);
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  color: var(--success);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-spacer {
+  margin-top: 4px;
+}
+
+.preview-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-wrap {
+  max-width: 560px;
+}
+
+.export-wrap {
+  max-width: 560px;
+}
+
+.export-preview-card {
+  margin-top: 24px;
+  max-width: 560px;
+}
+
+.card-header .section-label {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}

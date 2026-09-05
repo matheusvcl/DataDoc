@@ -1,0 +1,63 @@
+/* Focus ring utility */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
+
+/* Selection color */
+::selection {
+  background: oklch(0.48 0.15 265 / 0.15);
+  color: var(--fg);
+}
+
+.sidebar,
+.main-content {
+  transition: none;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.dp-label-strong {
+  font-weight: 600;
+}
+
+.dp-label-static {
+  font-weight: 600;
+  cursor: default;
+  pointer-events: none;
+}
+
+@media print {
+  #titlebar,
+  .sidebar,
+  .preview-actions,
+  .page-header,
+  .toast,
+  .dialog-overlay {
+    display: none !important;
+  }
+
+  html,
+  body,
+  #root,
+  .app-layout,
+  .main-content {
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+  .preview-doc {
+    box-shadow: none;
+    border: none;
+    max-width: none;
+  }
+}

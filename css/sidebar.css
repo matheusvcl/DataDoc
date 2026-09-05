@@ -27,6 +27,7 @@
 .sidebar.collapsed .sidebar-header {
   padding: 20px 12px 12px;
   justify-content: center;
+  gap: 0;
 }
 
 .sidebar-logo {
@@ -121,6 +122,7 @@ html[data-sidebar-collapsed="1"] .sidebar {
 html[data-sidebar-collapsed="1"] .sidebar .sidebar-header {
   padding: 20px 12px 12px;
   justify-content: center;
+  gap: 0;
 }
 
 html[data-sidebar-collapsed="1"] .sidebar .sidebar-logo-text {

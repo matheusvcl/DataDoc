@@ -280,6 +280,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           cp latest.json "$RUNNER_TEMP/latest.json"
+          git checkout -- .
           git fetch origin dev
           git checkout -B dev origin/dev
           cp "$RUNNER_TEMP/latest.json" latest.json

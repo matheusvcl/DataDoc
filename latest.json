@@ -1,10 +1,10 @@
 {
   "version": "0.1.96-beta",
-  "notes": "Corrigido working tree sujo impedindo git checkout no CI ao fazer push de latest.json para dev.",
-  "pub_date": "2026-09-06T22:30:00Z",
+  "notes": "### Corrigido\n\n- Working tree sujo impedindo git checkout no CI ao fazer push de latest.json para dev",
+  "pub_date": "2026-09-06T21:42:31Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "placeholder",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReXYwZThSd3I0eXNNMVpta1F2c0JaVG5waVdEc3pZNU43NHBQY3lCZGNIRzYwN0dibnVMUThGa01ZL3ZBb1QwcDNId0VqR1B1NTluM011MWVsUW5TTFM1MzBhMkEvRlFVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NzMwOTUwCWZpbGU6RGF0YURvY18wLjEuOTYtYmV0YV94NjQtc2V0dXAuZXhlCkVPLzAvVFk2OUZKWnFsZ1BJOVV5ZkRSMTRUZytHYlhKUjRNNGk0OWs3NkgwdXYvV3lta0daVlFHNnZXQ005THBRMCtaOTVQOEoxTTY3V21jMGR3b0NnPT0K",
       "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.1.96-beta/DataDoc_0.1.96-beta_x64-setup.exe"
     }
   }

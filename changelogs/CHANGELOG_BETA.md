@@ -1,5 +1,5 @@
-## [v0.1.95-beta] - 06/09/2026
+## [v0.1.96-beta] - 06/09/2026
 
 ### Corrigido
 
-- Caminho /tmp incompatível com Windows no CI ao gerar latest.json
+- Working tree sujo impedindo git checkout no CI ao fazer push de latest.json para dev

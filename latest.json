@@ -1,11 +1,11 @@
 {
-  "version": "0.1.91-beta",
-  "notes": "Corrigido endpoint do updater e geracao automatica de latest.json.",
-  "pub_date": "2026-09-05T21:00:00Z",
+  "version": "0.1.93-beta",
+  "notes": " ### Corrigido  - Limpeza de entradas antigas da changelog ",
+  "pub_date": "2026-09-06T18:25:43Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "placeholder",
-      "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.1.91-beta/DataDoc_0.1.91-beta_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReXYwZThSd3I0eXVOWUZuNUY1eXkzYXRHRkl3RTM4QXZZRHVVRGNYTW0rNFV2dUFiM2tRR3RkTXRCdWIyMUpIOEhteWVvTXhWaDBaQzBud0xpSHdTdTdWOVVmcUtJVlFvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NzE5MTQxCWZpbGU6RGF0YURvY18wLjEuOTMtYmV0YV94NjQtc2V0dXAuZXhlCld6OStEYk9ydUtkZW85SWNkMjZKVDU2Z2dJRzBVYWRDeUtzWDVSSTdLVnpqdVhhbzRVbWxFZWFqVjNmcGhqUUZWWlRGU20xZVV0YmJDS1VmNjIzeUJnPT0K",
+      "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.1.93-beta/DataDoc_0.1.93-beta_x64-setup.exe"
     }
   }
 }

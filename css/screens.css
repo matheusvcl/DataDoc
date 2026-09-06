@@ -762,6 +762,29 @@
   margin: 0;
 }
 
+.changelog-parsed {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--fg-secondary);
+}
+
+.changelog-parsed strong {
+  display: block;
+  color: var(--fg);
+  margin-top: 12px;
+  margin-bottom: 4px;
+  font-size: 13.5px;
+}
+
+.changelog-parsed strong:first-child {
+  margin-top: 0;
+}
+
+.changelog-parsed .changelog-item {
+  display: block;
+  padding: 1px 0;
+}
+
 .settings-about-logo {
   display: flex;
   align-items: center;
@@ -1160,5 +1183,22 @@
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+}
+
+.update-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--danger-subtle);
+  color: var(--danger);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.changelog-item {
+  display: block;
+  padding: 2px 0;
 }
 

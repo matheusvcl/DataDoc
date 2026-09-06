@@ -18,6 +18,16 @@ function SettingsScreen({ showToast }) {
     }
   }, []);
 
+  // Parse markdown to simple HTML for changelog display
+  const parseChangelog = (text) => {
+    if (!text) return '';
+    return text
+      .replace(/^### (.+)$/gm, '<strong>$1</strong>')
+      .replace(/^## (.+)$/gm, '<strong style="font-size:14px">$1</strong>')
+      .replace(/^- (.+)$/gm, '<span class="changelog-item">• $1</span>')
+      .replace(/\n/g, '<br/>');
+  };
+
   const fetchChangelog = async () => {
     if (changelog) {
       setChangelog(null);
@@ -133,7 +143,10 @@ function SettingsScreen({ showToast }) {
               </div>
               {changelog && (
                 <div className="changelog-content">
-                  <pre>{changelog}</pre>
+                  <div 
+                    className="changelog-parsed"
+                    dangerouslySetInnerHTML={{ __html: parseChangelog(changelog) }}
+                  />
                 </div>
               )}
             </div>

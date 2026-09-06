@@ -6,10 +6,12 @@ function UpdateManager({ showToast }) {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloaded, setDownloaded] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
+  const [error, setError] = useState(null);
 
   const checkForUpdates = async (silent = false) => {
     if (checking) return;
     setChecking(true);
+    setError(null);
 
     try {
       const tauri = window.__TAURI__;
@@ -40,6 +42,7 @@ function UpdateManager({ showToast }) {
     if (downloading || !updateInfo) return;
     setDownloading(true);
     setDownloadProgress(0);
+    setError(null);
 
     try {
       const tauri = window.__TAURI__;
@@ -65,6 +68,7 @@ function UpdateManager({ showToast }) {
       showToast('Download concluído! Clique em Instalar para aplicar.');
     } catch (err) {
       console.error('Download error:', err);
+      setError('Erro ao baixar atualização');
       showToast('Erro ao baixar atualização');
     }
 
@@ -86,6 +90,17 @@ function UpdateManager({ showToast }) {
     setUpdateInfo(null);
     setDownloaded(false);
     setDownloadProgress(0);
+    setError(null);
+  };
+
+  // Parse markdown to simple HTML for changelog display
+  const parseMarkdown = (text) => {
+    if (!text) return '';
+    return text
+      .replace(/^### (.+)$/gm, '<strong>$1</strong>')
+      .replace(/^## (.+)$/gm, '<strong>$1</strong>')
+      .replace(/^- (.+)$/gm, '<span class="changelog-item">• $1</span>')
+      .replace(/\n/g, '<br/>');
   };
 
   useEffect(() => {
@@ -118,8 +133,22 @@ function UpdateManager({ showToast }) {
 
         {updateInfo.body && (
           <div className="update-notes">
-            <div className="update-notes-label">Novidades:</div>
-            <div className="update-notes-text">{updateInfo.body}</div>
+            <div className="update-notes-label">Novidades</div>
+            <div 
+              className="update-notes-text"
+              dangerouslySetInnerHTML={{ __html: parseMarkdown(updateInfo.body) }}
+            />
+          </div>
+        )}
+
+        {error && (
+          <div className="update-error">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+            <span>{error}</span>
           </div>
         )}
 

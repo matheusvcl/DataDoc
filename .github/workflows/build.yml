@@ -66,27 +66,13 @@ jobs:
             tauri/target
             ~/.cargo/registry
             ~/.cargo/git
-          key: rust-${{ runner.os }}-${{ github.run_id }}
+          key: rust-check-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
-            rust-${{ runner.os }}-
+            rust-check-${{ runner.os }}-
 
       - name: Check Rust compilation
         working-directory: tauri
         run: cargo check --release
-
-      - name: Clean old caches
-        if: always()
-        shell: bash
-        run: |
-          echo "Cleaning caches from previous runs..."
-          gh cache list --limit 100 --json id,createdAt --jq '
-            sort_by(.createdAt) | reverse | .[1:] | .[].id
-          ' | while read -r id; do
-            gh cache delete "$id" 2>/dev/null || true
-          done
-          echo "Done — kept most recent cache"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify tauri config
         run: |
@@ -142,9 +128,9 @@ jobs:
             tauri/target
             ~/.cargo/registry
             ~/.cargo/git
-          key: rust-${{ runner.os }}-${{ github.run_id }}
+          key: rust-build-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
-            rust-${{ runner.os }}-
+            rust-build-${{ runner.os }}-
 
       - name: Prepare frontend
         shell: bash
@@ -240,30 +226,39 @@ jobs:
           TAG="${{ github.ref_name }}"
           echo "Version: $VERSION, Tag: $TAG"
           
-          # Create latest.json
-          cat > latest.json << JSONEOF
-          {
-            "version": "$VERSION",
-            "notes": "$(echo '${{ steps.changelog.outputs.notes }}' | head -5 | tr '\n' ' ')",
-            "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "platforms": {
-              "windows-x86_64": {
-                "signature": "$SIGNATURE",
-                "url": "https://github.com/${{ github.repository }}/releases/download/$TAG/$(basename "$INSTALLER")"
-              }
-            }
-          }
-          JSONEOF
+          # Write changelog notes to file (avoids shell quoting issues)
+          echo '${{ steps.changelog.outputs.notes }}' > "$RUNNER_TEMP/notes.txt"
           
-          # Fix indentation (heredoc adds spaces)
+          # Generate latest.json with Node.js (safe JSON construction)
           node -e "
             const fs = require('fs');
-            const data = JSON.parse(fs.readFileSync('latest.json', 'utf8'));
+            const notes = fs.readFileSync(process.env.RUNNER_TEMP + '/notes.txt', 'utf8').trim();
+            const installer = '$(basename "$INSTALLER")';
+            const version = '$VERSION';
+            const tag = '$TAG';
+            const signature = '$SIGNATURE';
+            const repo = '${{ github.repository }}';
+            
+            const data = {
+              version: version,
+              notes: notes,
+              pub_date: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+              platforms: {
+                'windows-x86_64': {
+                  signature: signature,
+                  url: 'https://github.com/' + repo + '/releases/download/' + tag + '/' + installer
+                }
+              }
+            };
+            
             fs.writeFileSync('latest.json', JSON.stringify(data, null, 2) + '\n');
           "
           
           echo "=== latest.json ==="
           cat latest.json
+          
+          # Validate JSON
+          node -e "JSON.parse(require('fs').readFileSync('latest.json','utf8')); console.log('JSON valid')"
           
           # Upload to release
           gh release upload "$TAG" latest.json \
@@ -291,7 +286,7 @@ jobs:
           git add latest.json
           git diff --cached --quiet && echo "No changes" && exit 0
           git commit -m "chore: atualizar latest.json para ${{ github.ref_name }}"
-          git push origin dev
+          git push origin HEAD:refs/heads/dev
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

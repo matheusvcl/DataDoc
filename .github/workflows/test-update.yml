@@ -101,28 +101,35 @@ jobs:
           VERSION="${{ inputs.test_version }}"
           TAG="v${{ inputs.test_version }}"
           
-          cat > latest.json << JSONEOF
-          {
-            "version": "$VERSION",
-            "notes": "Release de teste para validar o sistema de atualização.",
-            "pub_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "platforms": {
-              "windows-x86_64": {
-                "signature": "$SIGNATURE",
-                "url": "https://github.com/${{ github.repository }}/releases/download/$TAG/$(basename "$INSTALLER")"
-              }
-            }
-          }
-          JSONEOF
-          
+          # Generate latest.json with Node.js (safe JSON construction)
           node -e "
             const fs = require('fs');
-            const data = JSON.parse(fs.readFileSync('latest.json', 'utf8'));
+            const installer = '$(basename "$INSTALLER")';
+            const version = '$VERSION';
+            const tag = '$TAG';
+            const signature = '$SIGNATURE';
+            const repo = '${{ github.repository }}';
+            
+            const data = {
+              version: version,
+              notes: 'Release de teste para validar o sistema de atualização.',
+              pub_date: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+              platforms: {
+                'windows-x86_64': {
+                  signature: signature,
+                  url: 'https://github.com/' + repo + '/releases/download/' + tag + '/' + installer
+                }
+              }
+            };
+            
             fs.writeFileSync('latest.json', JSON.stringify(data, null, 2) + '\n');
           "
           
           echo "=== latest.json ==="
           cat latest.json
+          
+          # Validate JSON
+          node -e "JSON.parse(require('fs').readFileSync('latest.json','utf8')); console.log('JSON valid')"
           
           gh release upload "$TAG" latest.json \
             --repo "${{ github.repository }}" \
@@ -149,7 +156,7 @@ jobs:
           git add latest.json
           git diff --cached --quiet && echo "No changes" && exit 0
           git commit -m "chore: atualizar latest.json para v${{ inputs.test_version }}"
-          git push origin dev
+          git push origin HEAD:refs/heads/dev
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

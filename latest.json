@@ -1,10 +1,10 @@
 {
   "version": "0.1.95-beta",
-  "notes": "Corrigido caminho /tmp incompatível com Windows no CI ao gerar latest.json.",
-  "pub_date": "2026-09-06T22:00:00Z",
+  "notes": "### Corrigido\n\n- Caminho /tmp incompatível com Windows no CI ao gerar latest.json",
+  "pub_date": "2026-09-06T20:14:36Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "placeholder",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReXYwZThSd3I0eWpsaTFHMjVXakF3QlFuTUpPd1RXenREOXlzY0hlR21SZ1dENWRQVktIeXRKNDFLSEYxMzNOZUVaSkxXRmw2Nk5GZVJva3hkbll0ZGVCaG5tL3hBMWc0PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NzI1Njc1CWZpbGU6RGF0YURvY18wLjEuOTUtYmV0YV94NjQtc2V0dXAuZXhlCndrdXBYb0Q1ZFA2REE3a3Z3WElhVnhsWWtIclZnWDJPMHJoQzJxeGNuZEJFQUxndUVDbFQyZVB2ZGZKVGxWWXk2blU2UjBMT1RLdzBlNVhlSDhxdUJBPT0K",
       "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.1.95-beta/DataDoc_0.1.95-beta_x64-setup.exe"
     }
   }

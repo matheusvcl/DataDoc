@@ -1,11 +1,11 @@
 {
-  "version": "0.1.94-beta",
-  "notes": "### Corrigido\n\n- CSP bloqueando fetch de changelog do GitHub\n- latest.json local desatualizado\n\n### Adicionado\n\n- Parse de markdown para changelog no dialog de update e nas configurações\n- Barra de progresso de download com porcentagem real\n- Tratamento de erros inline no dialog de atualização\n\n### Melhorado\n\n- CI gera latest.json com Node.js (evita problemas de quoting no bash)\n- Git push usa refspec explícito (evita ambiguidade branch/tag)\n- Cache keys separadas para jobs check-tauri e build",
-  "pub_date": "2026-09-06T19:48:42Z",
+  "version": "0.1.95-beta",
+  "notes": "Corrigido caminho /tmp incompatível com Windows no CI ao gerar latest.json.",
+  "pub_date": "2026-09-06T22:00:00Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReXYwZThSd3I0eXVsTGtrb2MwTy9MejFaYnpZbHlYdUhQNmVUTVZKUVhqTkdkVTdHMkNrbHZEUVoxd1IxV0wvNnFnMk0zWkhEMThEMjNqVHlZV3U4NVBqZnp2cjRtbEFvPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzg4NzI0MTIwCWZpbGU6RGF0YURvY18wLjEuOTQtYmV0YV94NjQtc2V0dXAuZXhlClNYZTlsd0hqb1pNL2ZweWhObmc2MzNudjg4b3RnVncvTkdJajBmUUNRa3NmOGVRNUhldUVzbWVNZDNXMVNVcHdYaXArMzVkL2Y2NWNDekh3cVZBZkNRPT0K",
-      "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.1.94-beta/DataDoc_0.1.94-beta_x64-setup.exe"
+      "signature": "placeholder",
+      "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.1.95-beta/DataDoc_0.1.95-beta_x64-setup.exe"
     }
   }
 }

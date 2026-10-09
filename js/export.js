@@ -13,6 +13,7 @@ function ExportScreen({ onBack, showToast }) {
   const handleExport = () => {
     const clients = loadClients();
     const empresa = loadCompany();
+    const today = localDateISO();
 
     if (format === 'json') {
       const data = {
@@ -25,29 +26,23 @@ function ExportScreen({ onBack, showToast }) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `datadoc-backup-${new Date().toISOString().slice(0,10)}.json`;
+      a.download = `datadoc-backup-${today}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } else if (format === 'csv') {
-      const headers = ['nome','tipoPessoa','cpf','nascimento','telefone','email','rua','numero','complemento','bairro','cep','cidade','estado'];
-      const rows = clients.map(c => headers.map(h => (c[h] || '').replace(/;/g, ',')).join(';'));
-      const csv = [headers.join(';'), ...rows].join('\n');
-      const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+      const blob = new Blob([serializeCSV(clients)], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `datadoc-clientes-${new Date().toISOString().slice(0,10)}.csv`;
+      a.download = `datadoc-clientes-${today}.csv`;
       a.click();
       URL.revokeObjectURL(url);
     } else if (format === 'txt') {
-      const headers = ['nome','tipoPessoa','cpf','nascimento','telefone','email','rua','numero','complemento','bairro','cep','cidade','estado'];
-      const rows = clients.map(c => headers.map(h => (c[h] || '')).join('\t'));
-      const txt = [headers.join('\t'), ...rows].join('\n');
-      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+      const blob = new Blob([serializeTXT(clients)], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `datadoc-clientes-${new Date().toISOString().slice(0,10)}.txt`;
+      a.download = `datadoc-clientes-${today}.txt`;
       a.click();
       URL.revokeObjectURL(url);
     }
@@ -139,7 +134,7 @@ function ExportScreen({ onBack, showToast }) {
           <div className="empty-state">
             {Icons.users}
             <div className="empty-state-title">Nenhum cliente encontrado</div>
-            <div className="empty-state-text">Não há clientes no escopo selecionado.</div>
+            <div className="empty-state-text">Cadastre ou importe clientes para exportar.</div>
           </div>
         )}
       </div>

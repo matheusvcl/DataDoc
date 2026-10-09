@@ -7,7 +7,7 @@ function SettingsScreen({ showToast }) {
       return 'light';
     }
   });
-  const [appVersion, setAppVersion] = useState('...');
+  const [appVersion, setAppVersion] = useState('—');
   const [changelog, setChangelog] = useState(null);
   const [loadingChangelog, setLoadingChangelog] = useState(false);
 
@@ -18,15 +18,9 @@ function SettingsScreen({ showToast }) {
     }
   }, []);
 
-  // Parse markdown to simple HTML for changelog display
-  const parseChangelog = (text) => {
-    if (!text) return '';
-    return text
-      .replace(/^### (.+)$/gm, '<strong>$1</strong>')
-      .replace(/^## (.+)$/gm, '<strong style="font-size:14px">$1</strong>')
-      .replace(/^- (.+)$/gm, '<span class="changelog-item">• $1</span>')
-      .replace(/\n/g, '<br/>');
-  };
+  // Parse markdown com escape de HTML (renderMarkdownSafe em js/core.js) —
+  // o conteúdo vem de raw.githubusercontent.com e nunca chega como HTML vivo
+  const parseChangelog = (text) => renderMarkdownSafe(text, { headingStyle: 'font-size:14px' });
 
   const fetchChangelog = async () => {
     if (changelog) {

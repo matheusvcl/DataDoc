@@ -215,8 +215,11 @@
   opacity: 0.7;
 }
 
-.datepicker-trigger .datepicker-clear {
-  margin-left: auto;
+.datepicker-wrapper .datepicker-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 20px;
   height: 20px;
   display: flex;
@@ -234,7 +237,7 @@
 }
 
 .datepicker-wrapper:hover .datepicker-clear.has-value,
-.datepicker-trigger:focus-visible .datepicker-clear.has-value {
+.datepicker-clear.has-value:focus-visible {
   opacity: 1;
   pointer-events: auto;
 }

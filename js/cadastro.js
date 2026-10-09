@@ -8,7 +8,8 @@ function CadastroScreen({ onPreview, onGoEmpresa, editData, onClearEdit, showToa
   };
   const [form, setForm] = useState(() => {
     const base = editData ? sanitizeClient(editData) : null;
-    return base || empty;
+    // form trabalha com o nome do estado (select); o storage guarda a UF
+    return base ? { ...base, estado: estadoFromUf(base.estado) } : empty;
   });
   const [errors, setErrors] = useState({});
   const [extraLabel, setExtraLabel] = useState('');
@@ -17,7 +18,12 @@ function CadastroScreen({ onPreview, onGoEmpresa, editData, onClearEdit, showToa
   useEffect(() => {
     if (editData) {
       const next = sanitizeClient(editData);
-      if (next) setForm(next);
+      if (next) setForm({ ...next, estado: estadoFromUf(next.estado) });
+    } else {
+      // editData null (ex.: clicou "Novo Cadastro" na sidebar): limpa o form
+      // para não salvar uma cópia do cliente que estava sendo editado
+      setForm(empty);
+      setErrors({});
     }
   }, [editData]);
 
@@ -48,6 +54,7 @@ function CadastroScreen({ onPreview, onGoEmpresa, editData, onClearEdit, showToa
     const er = {};
     const isPJ = form.tipoPessoa === 'pj';
     if (!form.nome.trim()) er.nome = isPJ ? 'Informe a razão social' : 'Informe o nome completo';
+    else if (form.nome.trim().length > 200) er.nome = 'Máximo de 200 caracteres';
     if (!form.cpf.trim()) {
       er.cpf = isPJ ? 'Informe o CNPJ' : 'Informe o CPF';
     } else if (isPJ && !isValidCNPJ(form.cpf)) {
@@ -56,8 +63,9 @@ function CadastroScreen({ onPreview, onGoEmpresa, editData, onClearEdit, showToa
       er.cpf = 'CPF inválido';
     }
     if (!form.telefone.trim()) er.telefone = 'Informe o telefone';
-    else if (digitsOnly(form.telefone, 11).length < 10) er.telefone = 'Telefone incompleto';
+    else if (!isValidPhone(form.telefone)) er.telefone = 'Telefone incompleto';
     if (form.email && !isValidEmail(form.email)) er.email = 'E-mail inválido';
+    if (form.nascimento && form.nascimento > localDateISO()) er.nascimento = 'Data de nascimento não pode ser futura';
     setErrors(er);
     return Object.keys(er).length === 0;
   };
@@ -65,15 +73,20 @@ function CadastroScreen({ onPreview, onGoEmpresa, editData, onClearEdit, showToa
   const handleSave = () => {
     if (!validate()) return;
     const clients = loadClients();
-    const entry = {
+    // passa pelo sanitizeClient para o formato salvo bater com o de leitura (estado em UF, limites de tamanho)
+    const entry = sanitizeClient({
       ...form,
       id: editData?.id || generateId(),
       criadoEm: editData?.criadoEm || new Date().toISOString(),
       atualizadoEm: new Date().toISOString()
-    };
+    });
+    if (!entry) {
+      showToast('Não foi possível salvar o cadastro.');
+      return;
+    }
     if (editData) {
       const idx = clients.findIndex(c => c.id === editData.id);
-      if (idx >= 0) clients[idx] = entry;
+      if (idx >= 0) clients[idx] = entry; else clients.unshift(entry);
     } else {
       clients.unshift(entry);
     }
@@ -90,7 +103,10 @@ function CadastroScreen({ onPreview, onGoEmpresa, editData, onClearEdit, showToa
   };
 
   const addExtra = () => {
-    if (!extraLabel.trim()) return;
+    if (!extraLabel.trim()) {
+      showToast('Informe o nome do campo adicional');
+      return;
+    }
     setForm(f => ({
       ...f,
       camposExtras: [...(f.camposExtras || []), { label: extraLabel.trim(), value: extraValue }]
@@ -132,7 +148,7 @@ function CadastroScreen({ onPreview, onGoEmpresa, editData, onClearEdit, showToa
 
           <div className="form-group full-width" data-od-id="field-nome">
             <label className="form-label" htmlFor="input-nome">{isPJ ? 'Razão Social' : 'Nome completo'} *</label>
-            <input id="input-nome" className={`form-input${errors.nome ? ' error' : ''}`} placeholder={isPJ ? 'Razão social da empresa' : 'Nome completo do cliente'} value={form.nome} onChange={set('nome')} aria-describedby={errors.nome ? 'err-nome' : undefined} aria-invalid={errors.nome ? 'true' : undefined} />
+            <input id="input-nome" maxLength={200} className={`form-input${errors.nome ? ' error' : ''}`} placeholder={isPJ ? 'Razão social da empresa' : 'Nome completo do cliente'} value={form.nome} onChange={set('nome')} aria-describedby={errors.nome ? 'err-nome' : undefined} aria-invalid={errors.nome ? 'true' : undefined} />
             {errors.nome && <span className="form-error" id="err-nome" role="alert">{errors.nome}</span>}
           </div>
 
@@ -146,6 +162,7 @@ function CadastroScreen({ onPreview, onGoEmpresa, editData, onClearEdit, showToa
           <div className="form-group">
             <label className="form-label" htmlFor="input-nascimento">Data de nascimento</label>
             <DatePicker id="input-nascimento" label="Data de nascimento" value={form.nascimento} onChange={(val) => { setForm(f => ({ ...f, nascimento: val })); if (errors.nascimento) setErrors(er => ({ ...er, nascimento: null })); }} />
+            {errors.nascimento && <span className="form-error" role="alert">{errors.nascimento}</span>}
           </div>
           )}
 

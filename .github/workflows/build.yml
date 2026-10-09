@@ -39,6 +39,9 @@ jobs:
           done
           echo "JS files present: $(ls js/*.js | wc -l)"
 
+      - name: Run core tests
+        run: node --test tests/core.test.js
+
       - name: Validate CSS variables
         run: |
           grep -q ':root' css/variables.css
@@ -92,13 +95,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Prepare dist
-        run: |
-          mkdir -p dist
-          cp index.html dist/
-          cp -r css dist/
-          cp -r js dist/
-          cp favicon.png dist/
-          if [ -d assets ]; then cp -r assets dist/; fi
+        run: node scripts/build.js
 
       - name: Verify dist
         run: |
@@ -134,13 +131,7 @@ jobs:
 
       - name: Prepare frontend
         shell: bash
-        run: |
-          mkdir -p dist
-          cp index.html dist/
-          cp -r css dist/
-          cp -r js dist/
-          cp favicon.png dist/
-          if [ -d assets ]; then cp -r assets dist/; fi
+        run: node scripts/build.js
 
       - name: Extract changelog
         id: changelog

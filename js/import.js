@@ -2,14 +2,18 @@
 function ImportScreen({ onBack, showToast }) {
   const [fileData, setFileData] = useState(null);
   const [preview, setPreview] = useState([]);
+  const [skipped, setSkipped] = useState(0);
   const [importing, setImporting] = useState(false);
   const fileRef = useRef(null);
+
+  const resetInput = () => { if (fileRef.current) fileRef.current.value = ''; };
 
   const handleFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > IMPORT_MAX_BYTES) {
       showToast('Arquivo muito grande (máximo 5 MB)');
+      resetInput();
       return;
     }
     const name = asText(file.name, 180);
@@ -18,58 +22,30 @@ function ImportScreen({ onBack, showToast }) {
     reader.onload = (ev) => {
       try {
         const text = String(ev.target.result || '');
-        if (name.toLowerCase().endsWith('.json')) {
-          const data = JSON.parse(text);
-          if (data && Array.isArray(data.clientes)) {
-            const valid = data.clientes.map(sanitizeClient).filter(Boolean);
-            setFileData({
-              name,
-              type: 'json',
-              isBackup: true,
-              hasEmpresa: !!(data.empresa && typeof data.empresa === 'object'),
-              empresa: data.empresa && typeof data.empresa === 'object' ? sanitizeCompany(data.empresa) : null
-            });
-            setPreview(valid);
-          } else {
-            const arr = Array.isArray(data) ? data : [data];
-            const valid = arr.map(sanitizeClient).filter(Boolean);
-            setFileData({ name, type: 'json', empresa: null });
-            setPreview(valid);
-          }
-        } else if (name.toLowerCase().endsWith('.csv') || name.toLowerCase().endsWith('.txt')) {
-          const lines = text.split(/\r?\n/).filter((l) => l.trim());
-          if (lines.length < 2) throw new Error('Arquivo vazio');
-          const sep = lines[0].includes('\t') ? '\t' : ';';
-          const headers = lines[0].split(sep).map((h) => h.trim().toLowerCase());
-          const rows = lines.slice(1).map((line) => {
-            const vals = line.split(sep).map((v) => v.trim());
-            const obj = {};
-            headers.forEach((h, i) => { obj[h] = vals[i] || ''; });
-            return sanitizeClient({
-              tipoPessoa: 'pf',
-              nome: obj.nome || obj['razão social'] || obj.razao_social || '',
-              cpf: obj.cpf || obj.cnpj || obj.documento || '',
-              nascimento: obj.nascimento || obj['data de nascimento'] || '',
-              telefone: obj.telefone || '',
-              email: obj.email || obj['e-mail'] || '',
-              rua: obj.rua || obj.endereço || obj.endereco || '',
-              numero: obj.numero || '',
-              complemento: obj.complemento || '',
-              bairro: obj.bairro || '',
-              cep: obj.cep || '',
-              cidade: obj.cidade || '',
-              estado: obj.estado || ''
-            });
-          }).filter(Boolean);
-          setFileData({ name, type: name.toLowerCase().endsWith('.txt') ? 'txt' : 'csv', empresa: null });
-          setPreview(rows);
-        } else {
-          throw new Error('Formato não suportado');
+        const parsed = parseImportText(text, name);
+        if (parsed.errors.length > 0) {
+          showToast('Erro ao ler arquivo: ' + parsed.errors[0]);
+          setFileData(null);
+          setPreview([]);
+          setSkipped(0);
+          resetInput();
+          return;
         }
+        setFileData({
+          name,
+          type: name.toLowerCase().endsWith('.json') ? 'json' : (name.toLowerCase().endsWith('.txt') ? 'txt' : 'csv'),
+          isBackup: !!parsed.empresa,
+          hasEmpresa: !!parsed.empresa,
+          empresa: parsed.empresa
+        });
+        setPreview(parsed.clients);
+        setSkipped(parsed.skipped);
       } catch (err) {
-        showToast('Erro ao ler arquivo: ' + (err && err.message ? err.message : 'formato inválido'));
+        showToast('Erro ao ler arquivo: formato inválido');
         setFileData(null);
         setPreview([]);
+        setSkipped(0);
+        resetInput();
       }
     };
     reader.readAsText(file);
@@ -86,14 +62,17 @@ function ImportScreen({ onBack, showToast }) {
       return;
     }
     if (fileData && fileData.empresa) saveCompany(fileData.empresa);
+    const added = merged.length - existing.length;
+    const skippedNote = skipped > 0 ? ` (${skipped} registro${skipped !== 1 ? 's' : ''} ignorado${skipped !== 1 ? 's' : ''})` : '';
     const msg = fileData && fileData.isBackup
-      ? `Backup restaurado: ${preview.length} cliente${preview.length !== 1 ? 's' : ''}${fileData.hasEmpresa ? ' + dados da empresa' : ''}`
-      : `${preview.length} cliente${preview.length !== 1 ? 's' : ''} importado${preview.length !== 1 ? 's' : ''} com sucesso`;
+      ? `Backup restaurado: ${added} cliente${added !== 1 ? 's' : ''}${fileData.hasEmpresa ? ' + dados da empresa' : ''}${skippedNote}`
+      : `${added} cliente${added !== 1 ? 's' : ''} importado${added !== 1 ? 's' : ''} com sucesso${skippedNote}`;
     showToast(msg);
     setFileData(null);
     setPreview([]);
+    setSkipped(0);
     setImporting(false);
-    if (fileRef.current) fileRef.current.value = '';
+    resetInput();
   };
 
   const handleDrop = (e) => {
@@ -154,9 +133,12 @@ function ImportScreen({ onBack, showToast }) {
               <div className="import-preview-header">
                 <div>
                   <span className="import-preview-name">{fileData.name}</span>
-                  <span className="import-preview-count">{preview.length} registro{preview.length !== 1 ? 's' : ''} encontrado{preview.length !== 1 ? 's' : ''}</span>
+                  <span className="import-preview-count">
+                    {preview.length} registro{preview.length !== 1 ? 's' : ''} válido{preview.length !== 1 ? 's' : ''}
+                    {skipped > 0 ? ` • ${skipped} ignorado${skipped !== 1 ? 's' : ''} (sem nome/documento)` : ''}
+                  </span>
                 </div>
-                <button className="btn btn-ghost btn-sm" onClick={() => { setFileData(null); setPreview([]); if (fileRef.current) fileRef.current.value = ''; }}>
+                <button className="btn btn-ghost btn-sm" onClick={() => { setFileData(null); setPreview([]); setSkipped(0); resetInput(); }}>
                   {Icons.x}
                 </button>
               </div>
@@ -168,6 +150,7 @@ function ImportScreen({ onBack, showToast }) {
                       <thead>
                         <tr>
                           <th>Nome</th>
+                          <th>Tipo</th>
                           <th>Documento</th>
                           <th>Telefone</th>
                           <th>Cidade</th>
@@ -177,6 +160,7 @@ function ImportScreen({ onBack, showToast }) {
                         {preview.slice(0, 20).map((c, i) => (
                           <tr key={i}>
                             <td><span className="client-name">{c.nome}</span></td>
+                            <td><span className="badge badge-muted">{(c.tipoPessoa || 'pf') === 'pj' ? 'PJ' : 'PF'}</span></td>
                             <td><span className="client-doc">{c.cpf}</span></td>
                             <td>{c.telefone || '—'}</td>
                             <td>{[c.cidade, c.estado].filter(Boolean).join('/') || '—'}</td>
@@ -184,7 +168,7 @@ function ImportScreen({ onBack, showToast }) {
                         ))}
                         {preview.length > 20 && (
                           <tr>
-                            <td colSpan={4} className="table-empty-note">
+                            <td colSpan={5} className="table-empty-note">
                               + {preview.length - 20} outros registros
                             </td>
                           </tr>
@@ -216,7 +200,7 @@ function ImportScreen({ onBack, showToast }) {
               </div>
               <div className="import-help-item">
                 <div className="import-help-title">CSV</div>
-                <div className="import-help-desc">Separado por ponto e vírgula (;). Primeira linha deve conter os cabeçalhos.</div>
+                <div className="import-help-desc">Separado por ponto e vírgula (;), com suporte a campos entre aspas. Primeira linha deve conter os cabeçalhos.</div>
               </div>
               <div className="import-help-item">
                 <div className="import-help-title">TXT</div>

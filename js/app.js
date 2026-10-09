@@ -67,16 +67,24 @@ function Sidebar({ active, onNav }) {
 function App() {
   const [screen, setScreen] = useState('welcome');
   const [previewClient, setPreviewClient] = useState(null);
+  const [previewOrigin, setPreviewOrigin] = useState('welcome');
   const [editData, setEditData] = useState(null);
   const [toast, setToast] = useState(null);
   const [empresaData, setEmpresaData] = useState(null);
-  const [onboardingDone, setOnboardingDone] = useState(() => localStorage.getItem(ONBOARDING_KEY) === 'true');
+  const [onboardingDone, setOnboardingDone] = useState(() => {
+    try {
+      return localStorage.getItem(ONBOARDING_KEY) === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
   const [postOnboardingImport, setPostOnboardingImport] = useState(false);
 
   const showToast = useCallback((msg) => setToast(msg), []);
 
-  const handlePreview = (client) => {
+  const handlePreview = (client, origin) => {
     setPreviewClient(client);
+    setPreviewOrigin(origin || 'welcome');
     setScreen('preview');
   };
 
@@ -88,16 +96,6 @@ function App() {
   const handleNav = (id) => {
     setEditData(null);
     setScreen(id);
-  };
-
-  const handleGeneratePDF = (empresa) => {
-    setEmpresaData(empresa);
-    if (previewClient) {
-      setScreen('preview');
-    } else {
-      showToast('Cadastre um cliente primeiro');
-      setScreen('cadastro');
-    }
   };
 
   if (!onboardingDone) {
@@ -146,7 +144,7 @@ function App() {
           <EmpresaScreen
             clientData={previewClient}
             onBack={() => setScreen('cadastro')}
-            onContinue={(empresa) => { setEmpresaData(empresa); setScreen('preview'); }}
+            onContinue={(empresa) => { setEmpresaData(empresa); setPreviewOrigin('empresa'); setScreen('preview'); }}
             showToast={showToast}
           />
         )}
@@ -167,12 +165,12 @@ function App() {
             client={previewClient}
             empresa={empresaData || loadCompany()}
             onEdit={handleEdit}
-            onBack={() => setScreen('empresa')}
+            onBack={() => setScreen(previewOrigin)}
           />
         )}
         {screen === 'historico' && (
           <HistoricoScreen
-            onPreview={handlePreview}
+            onPreview={(c) => handlePreview(c, 'historico')}
             onEdit={handleEdit}
             showToast={showToast}
           />
@@ -187,7 +185,11 @@ function App() {
   );
 }
 
-// Desabilitar menu de contexto do navegador
-document.addEventListener('contextmenu', e => e.preventDefault());
+// Menu de contexto: bloqueado na área do app, mas mantido em inputs/textarea
+// para permitir colar com o botão direito
+document.addEventListener('contextmenu', e => {
+  if (e.target.closest && e.target.closest('input, textarea')) return;
+  e.preventDefault();
+});
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);

@@ -5,6 +5,7 @@ function UpdateManager({ showToast }) {
   const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloaded, setDownloaded] = useState(false);
+  const [bytesRid, setBytesRid] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   const [error, setError] = useState(null);
 
@@ -21,12 +22,15 @@ function UpdateManager({ showToast }) {
         return;
       }
 
-      const update = await tauri.core.invoke('plugin:updater|check');
-      
-      if (update && update.available) {
-        setUpdateInfo(update);
+      // Contrato do tauri-plugin-updater: check retorna Option<Metadata>,
+      // Metadata = { rid, currentVersion, version, date, body, rawJson }.
+      // Some(metadata) => há atualização; None => já está na versão mais recente.
+      const meta = await tauri.core.invoke('plugin:updater|check');
+
+      if (meta && meta.rid != null) {
+        setUpdateInfo(meta);
         setShowDialog(true);
-        if (!silent) showToast('Nova versão disponível: ' + update.version);
+        if (!silent) showToast('Nova versão disponível: ' + meta.version);
       } else {
         if (!silent) showToast('Você já está na versão mais recente');
       }
@@ -46,23 +50,32 @@ function UpdateManager({ showToast }) {
 
     try {
       const tauri = window.__TAURI__;
+      const ChannelCtor = tauri && tauri.core && tauri.core.Channel;
+      if (!ChannelCtor) throw new Error('Channel da IPC indisponível');
       let downloadedBytes = 0;
       let totalBytes = 0;
 
-      await tauri.core.invoke('plugin:updater|download', {
-        onEvent: (event) => {
-          if (event.event === 'Started') {
-            totalBytes = event.data.contentLength || 0;
-          } else if (event.event === 'Progress') {
-            downloadedBytes += event.data.chunkLength || 0;
-            if (totalBytes > 0) {
-              setDownloadProgress(Math.round((downloadedBytes / totalBytes) * 100));
-            }
-          } else if (event.event === 'Finished') {
-            setDownloadProgress(100);
+      // download exige o rid do check e um Channel (função simples não é Channel na IPC v2);
+      // o retorno é o ResourceId dos bytes, usado no install.
+      const onEvent = new ChannelCtor();
+      onEvent.onmessage = (event) => {
+        if (event.event === 'Started') {
+          totalBytes = (event.data && event.data.contentLength) || 0;
+        } else if (event.event === 'Progress') {
+          downloadedBytes += (event.data && event.data.chunkLength) || 0;
+          if (totalBytes > 0) {
+            setDownloadProgress(Math.min(99, Math.round((downloadedBytes / totalBytes) * 100)));
           }
+        } else if (event.event === 'Finished') {
+          setDownloadProgress(100);
         }
+      };
+
+      const bytes = await tauri.core.invoke('plugin:updater|download', {
+        rid: updateInfo.rid,
+        onEvent
       });
+      setBytesRid(bytes);
 
       setDownloaded(true);
       showToast('Download concluído! Clique em Instalar para aplicar.');
@@ -78,7 +91,10 @@ function UpdateManager({ showToast }) {
   const installUpdate = async () => {
     try {
       const tauri = window.__TAURI__;
-      await tauri.core.invoke('plugin:updater|install');
+      await tauri.core.invoke('plugin:updater|install', {
+        updateRid: updateInfo.rid,
+        bytesRid: bytesRid
+      });
     } catch (err) {
       console.error('Install error:', err);
       showToast('Erro ao instalar atualização');
@@ -89,19 +105,13 @@ function UpdateManager({ showToast }) {
     setShowDialog(false);
     setUpdateInfo(null);
     setDownloaded(false);
+    setBytesRid(null);
     setDownloadProgress(0);
     setError(null);
   };
 
-  // Parse markdown to simple HTML for changelog display
-  const parseMarkdown = (text) => {
-    if (!text) return '';
-    return text
-      .replace(/^### (.+)$/gm, '<strong>$1</strong>')
-      .replace(/^## (.+)$/gm, '<strong>$1</strong>')
-      .replace(/^- (.+)$/gm, '<span class="changelog-item">• $1</span>')
-      .replace(/\n/g, '<br/>');
-  };
+  // Markdown renderizado com escape de HTML (renderMarkdownSafe em js/core.js)
+  const parseMarkdown = (text) => renderMarkdownSafe(text);
 
   useEffect(() => {
     window.checkForUpdates = checkForUpdates;

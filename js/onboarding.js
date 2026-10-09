@@ -7,7 +7,26 @@ function OnboardingFlow({ onComplete }) {
   });
   const [importFile, setImportFile] = useState(null);
   const [importPreview, setImportPreview] = useState([]);
+  const [importEmpresa, setImportEmpresa] = useState(null);
+  const [importError, setImportError] = useState(null);
+  const [empresaErrors, setEmpresaErrors] = useState({});
   const fileRef = useRef(null);
+
+  // Mesma regra da tela Empresa: empresa vazia é permitida; se houver dados, precisam ser válidos.
+  const validateEmpresa = () => {
+    const any = ['razaoSocial', 'cnpj', 'telefone', 'email', 'rua', 'bairro', 'cep']
+      .some(k => String(empresaForm[k] || '').trim());
+    if (!any) { setEmpresaErrors({}); return true; }
+    const er = validatePerson(
+      { nome: empresaForm.razaoSocial, cpf: empresaForm.cnpj, telefone: empresaForm.telefone, email: empresaForm.email },
+      { requireDocumento: false, isPJ: true }
+    );
+    if (Object.keys(er).length === 0 && !String(empresaForm.razaoSocial || '').trim()) {
+      er.nome = 'Informe a razão social';
+    }
+    setEmpresaErrors(er);
+    return Object.keys(er).length === 0;
+  };
 
   const handleEmpresaSet = (field) => (e) => {
     let val = e.target.value;
@@ -36,8 +55,12 @@ function OnboardingFlow({ onComplete }) {
     if (!skipImport && importPreview.length > 0) {
       const existing = loadClients();
       saveClients(mergeImportedClients(importPreview, existing));
+      // a empresa do arquivo só é aplicada na confirmação da importação
+      if (importEmpresa) saveCompany(importEmpresa);
     }
-    localStorage.setItem(ONBOARDING_KEY, 'true');
+    try {
+      localStorage.setItem(ONBOARDING_KEY, 'true');
+    } catch (e) { /* storage bloqueado — segue sem persistir a flag */ }
     onComplete(!skipImport && importPreview.length > 0);
   };
 
@@ -47,6 +70,8 @@ function OnboardingFlow({ onComplete }) {
     if (file.size > IMPORT_MAX_BYTES) {
       setImportFile(null);
       setImportPreview([]);
+      setImportEmpresa(null);
+      setImportError('Arquivo muito grande (máximo 5 MB)');
       return;
     }
     const name = asText(file.name, 180);
@@ -54,45 +79,25 @@ function OnboardingFlow({ onComplete }) {
     reader.onload = (ev) => {
       try {
         const text = String(ev.target.result || '');
-        let rows = [];
-        if (name.toLowerCase().endsWith('.json')) {
-          const data = JSON.parse(text);
-          const arr = data && Array.isArray(data.clientes) ? data.clientes : (Array.isArray(data) ? data : [data]);
-          if (data && data.empresa && typeof data.empresa === 'object') {
-            saveCompany(sanitizeCompany(data.empresa));
-          }
-          rows = arr.map(sanitizeClient).filter(Boolean);
-        } else if (name.toLowerCase().endsWith('.csv') || name.toLowerCase().endsWith('.txt')) {
-          const lines = text.split(/\r?\n/).filter((l) => l.trim());
-          if (lines.length < 2) throw new Error('Arquivo vazio');
-          const sep = lines[0].includes('\t') ? '\t' : ';';
-          const headers = lines[0].split(sep).map((h) => h.trim().toLowerCase());
-          rows = lines.slice(1).map((line) => {
-            const vals = line.split(sep).map((v) => v.trim());
-            const obj = {};
-            headers.forEach((h, i) => { obj[h] = vals[i] || ''; });
-            return sanitizeClient({
-              tipoPessoa: 'pf',
-              nome: obj.nome || obj['razão social'] || obj.razao_social || '',
-              cpf: obj.cpf || obj.cnpj || obj.documento || '',
-              nascimento: obj.nascimento || obj['data de nascimento'] || '',
-              telefone: obj.telefone || '',
-              email: obj.email || obj['e-mail'] || '',
-              rua: obj.rua || obj.endereço || obj.endereco || '',
-              numero: obj.numero || '',
-              complemento: obj.complemento || '',
-              bairro: obj.bairro || '',
-              cep: obj.cep || '',
-              cidade: obj.cidade || '',
-              estado: obj.estado || ''
-            });
-          }).filter(Boolean);
+        const parsed = parseImportText(text, name);
+        if (parsed.errors.length > 0) {
+          setImportFile(null);
+          setImportPreview([]);
+          setImportEmpresa(null);
+          setImportError(parsed.errors[0]);
+          return;
         }
         setImportFile(name);
-        setImportPreview(rows);
+        setImportPreview(parsed.clients);
+        setImportEmpresa(parsed.empresa);
+        setImportError(parsed.skipped > 0
+          ? `${parsed.skipped} registro${parsed.skipped !== 1 ? 's' : ''} ignorado${parsed.skipped !== 1 ? 's' : ''} (sem nome/documento)`
+          : null);
       } catch (err) {
         setImportFile(null);
         setImportPreview([]);
+        setImportEmpresa(null);
+        setImportError('Erro ao ler arquivo: formato inválido');
       }
     };
     reader.readAsText(file);
@@ -123,19 +128,23 @@ function OnboardingFlow({ onComplete }) {
         <div className="form-grid">
           <div className="form-group full-width">
             <label className="form-label" htmlFor="ob-razao">Razão Social</label>
-            <input id="ob-razao" className="form-input" placeholder="Nome da empresa" value={empresaForm.razaoSocial} onChange={handleEmpresaSet('razaoSocial')} />
+            <input id="ob-razao" maxLength={200} className={`form-input${empresaErrors.nome ? ' error' : ''}`} placeholder="Nome da empresa" value={empresaForm.razaoSocial} onChange={handleEmpresaSet('razaoSocial')} />
+            {empresaErrors.nome && <span className="form-error" role="alert">{empresaErrors.nome}</span>}
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="ob-cnpj">CNPJ</label>
-            <input id="ob-cnpj" className="form-input" placeholder="XX.XXX.XXX/XXXX-XX" value={empresaForm.cnpj} onChange={handleEmpresaSet('cnpj')} />
+            <input id="ob-cnpj" className={`form-input${empresaErrors.cpf ? ' error' : ''}`} placeholder="XX.XXX.XXX/XXXX-XX" value={empresaForm.cnpj} onChange={handleEmpresaSet('cnpj')} />
+            {empresaErrors.cpf && <span className="form-error" role="alert">{empresaErrors.cpf}</span>}
           </div>
           <div className="form-group">
             <label className="form-label" htmlFor="ob-tel">Telefone</label>
-            <input id="ob-tel" className="form-input" placeholder="(00) 00000-0000" value={empresaForm.telefone} onChange={handleEmpresaSet('telefone')} />
+            <input id="ob-tel" className={`form-input${empresaErrors.telefone ? ' error' : ''}`} placeholder="(00) 00000-0000" value={empresaForm.telefone} onChange={handleEmpresaSet('telefone')} />
+            {empresaErrors.telefone && <span className="form-error" role="alert">{empresaErrors.telefone}</span>}
           </div>
           <div className="form-group full-width">
             <label className="form-label" htmlFor="ob-email">E-mail</label>
-            <input id="ob-email" className="form-input" type="email" placeholder="contato@empresa.com" value={empresaForm.email} onChange={handleEmpresaSet('email')} />
+            <input id="ob-email" className={`form-input${empresaErrors.email ? ' error' : ''}`} type="email" placeholder="contato@empresa.com" value={empresaForm.email} onChange={handleEmpresaSet('email')} />
+            {empresaErrors.email && <span className="form-error" role="alert">{empresaErrors.email}</span>}
           </div>
 
           <div className="form-group full-width section-spacer">
@@ -174,7 +183,7 @@ function OnboardingFlow({ onComplete }) {
       </div>
       <div className="onboarding-nav">
         <button className="btn btn-ghost" onClick={() => setStep(0)}>Voltar</button>
-        <button className="btn btn-primary" onClick={() => setStep(2)}>Próximo</button>
+        <button className="btn btn-primary" onClick={() => { if (validateEmpresa()) setStep(2); }}>Próximo</button>
       </div>
       <button className="btn btn-ghost btn-sm onboarding-skip" onClick={() => finishOnboarding(true)}>Pular configuração</button>
     </div>,
@@ -193,7 +202,12 @@ function OnboardingFlow({ onComplete }) {
         </div>
         {importPreview.length > 0 && (
           <div className="import-result">
-            {Icons.check} {importPreview.length} registro{importPreview.length !== 1 ? 's' : ''} encontrado{importPreview.length !== 1 ? 's' : ''}
+            {Icons.check} {importPreview.length} registro{importPreview.length !== 1 ? 's' : ''} válido{importPreview.length !== 1 ? 's' : ''}{importError ? ` • ${importError}` : ''}
+          </div>
+        )}
+        {importPreview.length === 0 && importError && (
+          <div className="import-result" role="alert" style={{ color: 'var(--danger, #d33)' }}>
+            {importError}
           </div>
         )}
       </div>

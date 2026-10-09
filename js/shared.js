@@ -28,93 +28,8 @@ const Icons = {
   filePlus: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>,
 };
 
-const digitsOnly = (v, max) => String(v == null ? '' : v).replace(/\D/g, '').slice(0, max);
-
-const asText = (v, max) => String(v == null ? '' : v).slice(0, max);
-
-const formatCPF = (v) => {
-  const d = digitsOnly(v, 11);
-  if (d.length <= 3) return d;
-  if (d.length <= 6) return d.slice(0, 3) + '.' + d.slice(3);
-  if (d.length <= 9) return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6);
-  return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9);
-};
-
-const formatCNPJ = (v) => {
-  const d = digitsOnly(v, 14);
-  if (d.length <= 2) return d;
-  if (d.length <= 5) return d.slice(0, 2) + '.' + d.slice(2);
-  if (d.length <= 8) return d.slice(0, 2) + '.' + d.slice(2, 5) + '.' + d.slice(5);
-  if (d.length <= 12) return d.slice(0, 2) + '.' + d.slice(2, 5) + '.' + d.slice(5, 8) + '/' + d.slice(8);
-  return d.slice(0, 2) + '.' + d.slice(2, 5) + '.' + d.slice(5, 8) + '/' + d.slice(8, 12) + '-' + d.slice(12);
-};
-
-const formatPhone = (v) => {
-  const d = digitsOnly(v, 11);
-  if (d.length <= 2) return d.length ? '(' + d : '';
-  if (d.length <= 7) return '(' + d.slice(0, 2) + ') ' + d.slice(2);
-  return '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7);
-};
-
-const formatCEP = (v) => {
-  const d = digitsOnly(v, 8);
-  if (d.length <= 5) return d;
-  return d.slice(0, 5) + '-' + d.slice(5);
-};
-
-const formatDate = (d) => {
-  if (!d || typeof d !== 'string') return '—';
-  const parts = d.split('-');
-  if (parts.length !== 3) return d;
-  const [y, m, day] = parts;
-  if (!y || !m || !day) return '—';
-  return `${day}/${m}/${y}`;
-};
-
-const generateId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
-
-const safeFilename = (name) => {
-  const s = asText(name, 80)
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .toLowerCase();
-  return s.slice(0, 60) || 'cliente';
-};
-
-const isValidCPF = (value) => {
-  const d = digitsOnly(value, 11);
-  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
-  let sum = 0;
-  for (let i = 0; i < 9; i++) sum += Number(d[i]) * (10 - i);
-  let rest = (sum * 10) % 11;
-  if (rest === 10) rest = 0;
-  if (rest !== Number(d[9])) return false;
-  sum = 0;
-  for (let i = 0; i < 10; i++) sum += Number(d[i]) * (11 - i);
-  rest = (sum * 10) % 11;
-  if (rest === 10) rest = 0;
-  return rest === Number(d[10]);
-};
-
-const isValidCNPJ = (value) => {
-  const d = digitsOnly(value, 14);
-  if (d.length !== 14 || /^(\d)\1{13}$/.test(d)) return false;
-  const calc = (weights) => {
-    const sum = weights.reduce((acc, n, i) => acc + Number(d[i]) * n, 0);
-    const rest = sum % 11;
-    return rest < 2 ? 0 : 11 - rest;
-  };
-  return calc([5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]) === Number(d[12])
-    && calc([6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]) === Number(d[13]);
-};
-
-const isValidEmail = (value) => {
-  const email = asText(value, 200).trim();
-  if (!email) return true;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-};
+// Funções puras (asText, digitsOnly, máscaras, validadores, sanitização, CSV, tema)
+// vivem em js/core.js — carregado antes deste arquivo.
 
 const fetchJson = async (url, timeoutMs = 8000) => {
   const ctrl = new AbortController();
@@ -161,165 +76,11 @@ const searchAddressByStreet = async (uf, cidade, rua) => {
   }));
 };
 
-const STORAGE_KEY = 'cadastro_clientes';
-const COMPANY_KEY = 'datadoc_empresa';
-const ONBOARDING_KEY = 'datadoc_onboarding_done';
-const THEME_KEY = 'datadoc_theme';
-const IMPORT_MAX_BYTES = 5 * 1024 * 1024;
+// STORAGE_KEY, EMPTY_EMPRESA, sanitize*, load/saveClients/Company, tema: js/core.js
 
-const EMPTY_EMPRESA = {
-  razaoSocial: '',
-  cnpj: '',
-  telefone: '',
-  email: '',
-  rua: '',
-  numero: '',
-  complemento: '',
-  bairro: '',
-  cep: '',
-  cidade: '',
-  estado: ''
-};
+// mergeImportedClients: js/core.js (dedup por id e por documento+nome)
 
-const sanitizeExtras = (raw) => {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .filter((item) => item && typeof item === 'object')
-    .slice(0, 20)
-    .map((item) => ({
-      label: asText(item.label, 80).trim(),
-      value: asText(item.value, 500)
-    }))
-    .filter((item) => item.label);
-};
-
-const sanitizeClient = (raw) => {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
-  const nome = asText(raw.nome, 200).trim();
-  const cpf = asText(raw.cpf, 32).trim();
-  if (!nome || !cpf) return null;
-  return {
-    id: asText(raw.id, 64) || generateId(),
-    tipoPessoa: raw.tipoPessoa === 'pj' ? 'pj' : 'pf',
-    nome,
-    cpf,
-    nascimento: asText(raw.nascimento, 16),
-    telefone: asText(raw.telefone, 32),
-    email: asText(raw.email, 200),
-    rua: asText(raw.rua, 200),
-    numero: asText(raw.numero, 20),
-    complemento: asText(raw.complemento, 100),
-    bairro: asText(raw.bairro, 100),
-    cep: asText(raw.cep, 16),
-    cidade: asText(raw.cidade, 100),
-    estado: asText(raw.estado, 50),
-    camposExtras: sanitizeExtras(raw.camposExtras),
-    criadoEm: asText(raw.criadoEm, 40) || new Date().toISOString(),
-    atualizadoEm: asText(raw.atualizadoEm, 40) || new Date().toISOString()
-  };
-};
-
-const sanitizeCompany = (raw) => {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { ...EMPTY_EMPRESA };
-  return {
-    razaoSocial: asText(raw.razaoSocial, 200),
-    cnpj: asText(raw.cnpj, 32),
-    telefone: asText(raw.telefone, 32),
-    email: asText(raw.email, 200),
-    rua: asText(raw.rua, 200),
-    numero: asText(raw.numero, 20),
-    complemento: asText(raw.complemento, 100),
-    bairro: asText(raw.bairro, 100),
-    cep: asText(raw.cep, 16),
-    cidade: asText(raw.cidade, 100),
-    estado: asText(raw.estado, 50)
-  };
-};
-
-const loadClients = () => {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-    if (!Array.isArray(parsed)) return [];
-    return parsed.map(sanitizeClient).filter(Boolean);
-  } catch (e) {
-    return [];
-  }
-};
-
-const saveClients = (clients) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(clients));
-    return true;
-  } catch (e) {
-    return false;
-  }
-};
-
-const loadCompany = () => {
-  try {
-    const stored = JSON.parse(localStorage.getItem(COMPANY_KEY) || 'null');
-    if (!stored) return { ...EMPTY_EMPRESA };
-    return sanitizeCompany(stored);
-  } catch (e) {
-    return { ...EMPTY_EMPRESA };
-  }
-};
-
-const saveCompany = (data) => {
-  try {
-    localStorage.setItem(COMPANY_KEY, JSON.stringify(sanitizeCompany(data)));
-    return true;
-  } catch (e) {
-    return false;
-  }
-};
-
-const normalizeTheme = (value) => (value === 'dark' ? 'dark' : 'light');
-
-const applyTheme = (value) => {
-  const theme = normalizeTheme(value);
-  document.documentElement.setAttribute('data-theme', theme);
-  try {
-    localStorage.setItem(THEME_KEY, theme);
-  } catch (e) { /* quota */ }
-  return theme;
-};
-
-const mergeImportedClients = (incoming, existing) => {
-  const used = new Set(existing.map((c) => c.id));
-  const prepared = incoming.map((c) => {
-    if (!c.id || used.has(c.id)) {
-      const next = { ...c, id: generateId() };
-      used.add(next.id);
-      return next;
-    }
-    used.add(c.id);
-    return c;
-  });
-  return [...prepared, ...existing];
-};
-
-// States
-const STATES = [
-  { uf: 'AC', nome: 'Acre' }, { uf: 'AL', nome: 'Alagoas' }, { uf: 'AP', nome: 'Amapá' },
-  { uf: 'AM', nome: 'Amazonas' }, { uf: 'BA', nome: 'Bahia' }, { uf: 'CE', nome: 'Ceará' },
-  { uf: 'DF', nome: 'Distrito Federal' }, { uf: 'ES', nome: 'Espírito Santo' },
-  { uf: 'GO', nome: 'Goiás' }, { uf: 'MA', nome: 'Maranhão' }, { uf: 'MT', nome: 'Mato Grosso' },
-  { uf: 'MS', nome: 'Mato Grosso do Sul' }, { uf: 'MG', nome: 'Minas Gerais' },
-  { uf: 'PA', nome: 'Pará' }, { uf: 'PB', nome: 'Paraíba' }, { uf: 'PR', nome: 'Paraná' },
-  { uf: 'PE', nome: 'Pernambuco' }, { uf: 'PI', nome: 'Piauí' },
-  { uf: 'RJ', nome: 'Rio de Janeiro' }, { uf: 'RN', nome: 'Rio Grande do Norte' },
-  { uf: 'RS', nome: 'Rio Grande do Sul' }, { uf: 'RO', nome: 'Rondônia' },
-  { uf: 'RR', nome: 'Roraima' }, { uf: 'SC', nome: 'Santa Catarina' },
-  { uf: 'SP', nome: 'São Paulo' }, { uf: 'SE', nome: 'Sergipe' }, { uf: 'TO', nome: 'Tocantins' }
-];
-
-const estadoFromUf = (value) => {
-  if (!value) return '';
-  const needle = String(value).toLowerCase();
-  const found = STATES.find((s) => s.uf.toLowerCase() === needle || s.nome.toLowerCase() === needle);
-  return found ? found.nome : String(value);
-};
+// STATES/estadoFromUf/ufFromEstado: js/core.js
 
 const CITIES_BY_STATE = {
   'Acre': ['Brasiléia','Cruzeiro do Sul','Feijó','Rio Branco','Sena Madureira','Senador Guiomard','Tarauacá'],
@@ -355,6 +116,7 @@ const CITIES_BY_STATE = {
 function CustomSelect({ value, onChange, options, placeholder, id }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
   const wrapperRef = useRef(null);
 
   useEffect(() => {
@@ -394,14 +156,27 @@ function CustomSelect({ value, onChange, options, placeholder, id }) {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       {open && (
-        <div className="custom-select-dropdown" role="listbox">
+        <div className="custom-select-dropdown" role="listbox" id={`${id || 'select'}-listbox`}>
           <div className="custom-select-search-wrap">
             <input
               type="text"
               className="custom-select-search"
               placeholder="Buscar..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => { setSearch(e.target.value); setActiveIndex(0); }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown') { e.preventDefault(); setActiveIndex(i => Math.min(i + 1, filtered.length - 1)); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); setActiveIndex(i => Math.max(i - 1, 0)); }
+                else if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const opt = filtered[activeIndex];
+                  if (opt !== undefined) { onChange(opt); setOpen(false); setSearch(''); }
+                }
+              }}
+              role="combobox"
+              aria-expanded={open}
+              aria-controls={`${id || 'select'}-listbox`}
+              aria-activedescendant={filtered.length > 0 ? `${id || 'select'}-opt-${activeIndex}` : undefined}
               autoFocus
             />
           </div>
@@ -409,12 +184,14 @@ function CustomSelect({ value, onChange, options, placeholder, id }) {
             {filtered.length === 0 ? (
               <div className="custom-select-empty">Nenhum resultado</div>
             ) : (
-              filtered.map(opt => (
+              filtered.map((opt, i) => (
                 <button
                   key={opt}
+                  id={`${id || 'select'}-opt-${i}`}
                   type="button"
-                  className={`custom-select-option${opt === value ? ' selected' : ''}`}
+                  className={`custom-select-option${opt === value ? ' selected' : ''}${i === activeIndex ? ' active' : ''}`}
                   onClick={() => { onChange(opt); setOpen(false); setSearch(''); }}
+                  onMouseEnter={() => setActiveIndex(i)}
                   role="option"
                   aria-selected={opt === value}
                 >
@@ -459,6 +236,7 @@ function AddressLookup({ onSelect, estado, cidade }) {
       if (requestId !== requestIdRef.current) return;
       setLoading(false);
       if (addr) {
+        // formulários trabalham com o nome do estado (select); o storage guarda UF
         onSelect({ ...addr, estado: estadoFromUf(addr.estado) });
         setQuery('');
         setOpen(false);
@@ -468,7 +246,8 @@ function AddressLookup({ onSelect, estado, cidade }) {
     }
     if (q.length >= 3 && estado && cidade) {
       setLoading(true);
-      const addrs = await searchAddressByStreet(estado, cidade, q);
+      // ViaCEP exige a UF (2 letras) — o form guarda o nome do estado
+      const addrs = await searchAddressByStreet(ufFromEstado(estado), cidade, q);
       if (requestId !== requestIdRef.current) return;
       setLoading(false);
       if (addrs.length > 0) {
@@ -545,15 +324,20 @@ function AddressLookup({ onSelect, estado, cidade }) {
 
 // Toast
 function Toast({ message, onDone }) {
+  const onDoneRef = useRef(onDone);
+  useEffect(() => { onDoneRef.current = onDone; });
+  // O timer depende só da mensagem — re-renders do App não o reiniciam (o toast sempre fecha)
   useEffect(() => {
-    const t = setTimeout(onDone, 2400);
+    const t = setTimeout(() => onDoneRef.current && onDoneRef.current(), 2400);
     return () => clearTimeout(t);
-  }, [onDone]);
+  }, [message]);
   return <div className="toast" role="status">{message}</div>;
 }
 
 // Confirm Dialog
 function ConfirmDialog({ title, message, onConfirm, onCancel }) {
+  const cancelRef = useRef(null);
+  useEffect(() => { cancelRef.current && cancelRef.current.focus(); }, []);
   useEffect(() => {
     const handleKey = (e) => { if (e.key === 'Escape') onCancel(); };
     document.addEventListener('keydown', handleKey);
@@ -566,7 +350,7 @@ function ConfirmDialog({ title, message, onConfirm, onCancel }) {
         <div className="dialog-title" id="dialog-title">{title}</div>
         <div className="dialog-text">{message}</div>
         <div className="dialog-actions">
-          <button className="btn btn-secondary btn-sm" onClick={onCancel}>Cancelar</button>
+          <button ref={cancelRef} className="btn btn-secondary btn-sm" onClick={onCancel}>Cancelar</button>
           <button className="btn btn-danger btn-sm" onClick={onConfirm}>Excluir</button>
         </div>
       </div>
@@ -651,9 +435,11 @@ function DatePicker({ value, onChange, id, label }) {
 
   const displayText = value ? formatDate(value) : 'Selecione uma data';
 
-  const currentYear = today.getFullYear();
-  const yearStart = currentYear - 80;
-  const yearEnd = currentYear + 10;
+  // Grade de anos paginada (12 por página, ancorada no ano em exibição);
+  // as setas movem viewDate ±12 e, portanto, mudam a página da grade.
+  const gridBase = viewDate.getFullYear();
+  const yearStart = Math.floor(gridBase / 12) * 12;
+  const yearEnd = yearStart + 11;
   const years = [];
   for (let y = yearStart; y <= yearEnd; y++) years.push(y);
 
@@ -671,16 +457,15 @@ function DatePicker({ value, onChange, id, label }) {
       >
         {Icons.calendar}
         <span>{displayText}</span>
-        <span
-          className={`datepicker-clear${value ? ' has-value' : ''}`}
-          onClick={clear}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); clear(e); } }}
-          role="button"
-          tabIndex={-1}
-          aria-label="Limpar data"
-        >
-          {Icons.x}
-        </span>
+      </button>
+      <button
+        type="button"
+        className={`datepicker-clear${value ? ' has-value' : ''}`}
+        onClick={clear}
+        tabIndex={value ? 0 : -1}
+        aria-label="Limpar data"
+      >
+        {Icons.x}
       </button>
       {open && (
         <div className="datepicker-dropdown" role="dialog" aria-label="Calendário">

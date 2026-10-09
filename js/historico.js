@@ -9,14 +9,17 @@ function HistoricoScreen({ onPreview, onEdit, showToast }) {
   }, []);
 
   const filtered = clients.filter(c => {
-    const q = search.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const nome = String(c.nome || '').toLowerCase();
+    // busca sem acento ("Jose" encontra "José") e por nome, documento ou e-mail
+    const q = normalizeText(search).replace(/[^a-z0-9]/g, '');
+    const nome = normalizeText(c.nome);
+    const email = normalizeText(c.email);
     const doc = String(c.cpf || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-    return nome.includes(search.toLowerCase()) || doc.includes(q);
+    return nome.includes(normalizeText(search))
+      || email.includes(normalizeText(search))
+      || (q && doc.includes(q));
   }).sort((a, b) => {
-    const ca = [a.cidade, a.estado].filter(Boolean).join('/').toLowerCase();
-    const cb = [b.cidade, b.estado].filter(Boolean).join('/').toLowerCase();
-    return ca.localeCompare(cb, 'pt-BR');
+    // mais recentes primeiro
+    return String(b.criadoEm || '').localeCompare(String(a.criadoEm || ''));
   });
 
   const confirmDelete = () => {

@@ -36,6 +36,12 @@ jobs:
           done
           echo "JS files present: $(ls js/*.js | wc -l)"
 
+      - name: Run core tests
+        run: node --test tests/core.test.js
+
+      - name: Build dist
+        run: node scripts/build.js
+
       - name: Validate CSS variables
         run: |
           grep -q ':root' css/variables.css

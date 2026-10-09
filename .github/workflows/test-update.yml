@@ -85,7 +85,7 @@ jobs:
 
       - name: Deletar caches antigos
         if: success()
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           CACHE_PREFIX: rust-test-${{ runner.os }}-
           CACHE_CURRENT: rust-test-${{ runner.os }}-${{ github.run_id }}

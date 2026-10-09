@@ -121,7 +121,8 @@ jobs:
           fi
           echo "Installer: $INSTALLER"
           
-          # (o CLI atual exige --private-key-path; o env sozinho nao basta)
+          # (o CLI lê TAURI_SIGNING_PRIVATE_KEY e preenche --private-key automaticamente,
+          #  conflitando com --private-key-path; por isso removemos o env só para o npx)
           KEY_FILE="$RUNNER_TEMP/tauri.key"
           printf '%s' "$TAURI_SIGNING_PRIVATE_KEY" > "$KEY_FILE.raw"
           if base64 -d "$KEY_FILE.raw" > "$KEY_FILE" 2>/dev/null && grep -q "untrusted comment" "$KEY_FILE"; then
@@ -129,7 +130,7 @@ jobs:
           else
             cp "$KEY_FILE.raw" "$KEY_FILE"
           fi
-          npx @tauri-apps/cli@latest signer sign \
+          env -u TAURI_SIGNING_PRIVATE_KEY npx @tauri-apps/cli@latest signer sign \
             --private-key-path "$KEY_FILE" \
             -p "" \
             "$INSTALLER"

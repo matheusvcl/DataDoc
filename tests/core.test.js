@@ -159,6 +159,37 @@ test('renderMarkdownSafe escapa HTML antes de marcar o markdown', () => {
   assert.ok(html.includes('changelog-item'));
 });
 
+test('renderMarkdownSafe vira blocos e descarta linhas em branco (sem <br/>)', () => {
+  const html = core.renderMarkdownSafe('## Título\n\n### Seção\n\n- item 1\n\n- item 2\n\ntexto solto');
+  assert.ok(!html.includes('<br'));
+  assert.equal((html.match(/changelog-item/g) || []).length, 2);
+  assert.equal((html.match(/md-heading/g) || []).length, 2);
+  assert.ok(html.includes('md-line'));
+});
+
+test('extractChangelogSection extrai só a versão pedida', () => {
+  const md = [
+    '## [v0.1.98-beta] - 09/10/2026',
+    '',
+    '### Melhorado',
+    '',
+    '- item da 98',
+    '',
+    '## [v0.1.91-beta] - 08/10/2026',
+    '',
+    '- item da 91'
+  ].join('\n');
+  const sec = core.extractChangelogSection(md, '0.1.98-beta');
+  assert.ok(sec.includes('item da 98'));
+  assert.ok(!sec.includes('item da 91'));
+  assert.ok(!sec.includes('## [')); // heading da versão não entra
+  // aceita 'v' na frente e não casa versão por prefixo
+  assert.ok(core.extractChangelogSection(md, 'v0.1.98-beta').includes('item da 98'));
+  assert.equal(core.extractChangelogSection(md, '0.1.9'), '');
+  assert.equal(core.extractChangelogSection(md, '0.1.99-beta'), '');
+  assert.equal(core.extractChangelogSection('', '0.1.98-beta'), '');
+});
+
 test('normalizeText ignora acentos', () => {
   assert.equal(core.normalizeText('José'), core.normalizeText('jose'));
   assert.equal(core.normalizeText('SÃO PAULO'), 'sao paulo');

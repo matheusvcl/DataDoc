@@ -452,14 +452,47 @@ const escapeHTML = (s) => String(s == null ? '' : s)
 
 // Escapa TODO o texto antes de aplicar os padrões de markdown — nada do conteúdo
 // remoto chega ao DOM como HTML vivo.
+// Cada linha vira um bloco (heading / item / texto) e linhas em branco são
+// descartadas: o espaçamento fica só no CSS, sem <br/> empilhados.
 const renderMarkdownSafe = (text, opts) => {
   const o = Object.assign({ headingStyle: '' }, opts || {});
   if (!text) return '';
+  const headingStyle = o.headingStyle ? ` style="${o.headingStyle}"` : '';
   return escapeHTML(text)
-    .replace(/^### (.+)$/gm, '<strong>$1</strong>')
-    .replace(/^## (.+)$/gm, o.headingStyle ? `<strong style="${o.headingStyle}">$1</strong>` : '<strong>$1</strong>')
-    .replace(/^- (.+)$/gm, '<span class="changelog-item">• $1</span>')
-    .replace(/\n/g, '<br/>');
+    .split(/\r?\n/)
+    .map((raw) => {
+      const line = raw.trim();
+      if (!line) return '';
+      let m;
+      if ((m = line.match(/^#{1,3}\s+(.+)$/))) return `<strong class="md-heading"${headingStyle}>${m[1]}</strong>`;
+      if ((m = line.match(/^[-*]\s+(.+)$/))) return `<span class="changelog-item">• ${m[1]}</span>`;
+      return `<span class="md-line">${line}</span>`;
+    })
+    .filter(Boolean)
+    .join('');
+};
+
+// Extrai a seção de uma versão específica do changelog (sem o heading),
+// parando no próximo heading — espelha scripts/extract-changelog.sh.
+const extractChangelogSection = (text, version) => {
+  if (!text || !version) return '';
+  const target = String(version).replace(/^v/i, '').trim().toLowerCase();
+  if (!target) return '';
+  const lines = String(text).split(/\r?\n/);
+  const out = [];
+  let collecting = false;
+  for (const line of lines) {
+    const trimmed = line.trim();
+    // Só headings `##` delimitam versões; `###` são subseções dentro da entrada
+    const heading = trimmed.match(/^##\s+\[?v?([^\]\s]+)\]?/i);
+    if (heading) {
+      if (collecting) break;
+      if (heading[1].toLowerCase() === target) collecting = true;
+      continue;
+    }
+    if (collecting) out.push(line);
+  }
+  return out.join('\n').trim();
 };
 
 // ---------- Tema ----------
@@ -488,6 +521,6 @@ if (typeof module !== 'undefined' && module.exports) {
     mergeImportedClients,
     parseDelimited, rowToClient, parseImportText, CLIENT_EXPORT_HEADERS,
     escapeDelimited, serializeDelimited, serializeCSV, serializeTXT,
-    escapeHTML, renderMarkdownSafe, normalizeTheme, applyTheme
+    escapeHTML, renderMarkdownSafe, extractChangelogSection, normalizeTheme, applyTheme
   };
 }

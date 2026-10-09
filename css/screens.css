@@ -771,13 +771,17 @@
 .changelog-parsed strong {
   display: block;
   color: var(--fg);
-  margin-top: 12px;
-  margin-bottom: 4px;
+  margin-top: 10px;
+  margin-bottom: 2px;
   font-size: 13.5px;
 }
 
 .changelog-parsed strong:first-child {
   margin-top: 0;
+}
+
+.changelog-parsed .md-line {
+  display: block;
 }
 
 .changelog-parsed .changelog-item {
@@ -1151,7 +1155,28 @@
   font-size: 13.5px;
   color: var(--fg-secondary);
   line-height: 1.5;
-  white-space: pre-wrap;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.update-notes-text .md-heading {
+  display: block;
+  color: var(--fg);
+  margin: 8px 0 2px;
+  font-size: 13.5px;
+}
+
+.update-notes-text .md-heading:first-child {
+  margin-top: 0;
+}
+
+.update-notes-text .md-line,
+.update-notes-text .changelog-item {
+  display: block;
+}
+
+.update-notes-text .changelog-item {
+  padding: 1px 0;
 }
 
 .update-progress {
@@ -1199,6 +1224,6 @@
 
 .changelog-item {
   display: block;
-  padding: 2px 0;
+  padding: 1px 0;
 }
 

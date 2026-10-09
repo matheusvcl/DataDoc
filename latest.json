@@ -1,11 +1,11 @@
 {
-  "version": "0.1.98-beta",
-  "notes": "Melhorias de CI: cache de Rust com rotação automática, criação de release com token de fallback, assinatura via --private-key-path e Node 24 em todos os jobs.",
-  "pub_date": "2026-10-09T03:15:00Z",
+  "version": "0.1.99-beta",
+  "notes": "Changelog sem espaçamento excessivo, popup de atualização com a changelog completa da versão, barra de progresso durante o download e instalação com reinício; correção da assinatura do instalador no CI.",
+  "pub_date": "2026-10-09T17:10:00Z",
   "platforms": {
     "windows-x86_64": {
       "signature": "placeholder",
-      "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.1.98-beta/DataDoc_0.1.98-beta_x64-setup.exe"
+      "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.1.99-beta/DataDoc_0.1.99-beta_x64-setup.exe"
     }
   }
 }

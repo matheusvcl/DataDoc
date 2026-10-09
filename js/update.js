@@ -5,9 +5,28 @@ function UpdateManager({ showToast }) {
   const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [downloaded, setDownloaded] = useState(false);
+  const [installing, setInstalling] = useState(false);
   const [bytesRid, setBytesRid] = useState(null);
+  const [changelogText, setChangelogText] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [error, setError] = useState(null);
+
+  // Changelog da versão disponível (dev/main + CHANGELOG_BETA.md/CHANGELOG.md),
+  // com fallback para o body do release.
+  const fetchUpdateChangelog = async (version) => {
+    try {
+      const isBeta = /(beta|alpha|rc)/i.test(version);
+      const branch = isBeta ? 'dev' : 'main';
+      const file = isBeta ? 'CHANGELOG_BETA.md' : 'CHANGELOG.md';
+      const response = await fetch(`https://raw.githubusercontent.com/matheusvcl/DataDoc/${branch}/changelogs/${file}`);
+      if (response.ok) {
+        return extractChangelogSection(await response.text(), version);
+      }
+    } catch (err) {
+      // offline: mantém o body do release
+    }
+    return '';
+  };
 
   const checkForUpdates = async (silent = false) => {
     if (checking) return;
@@ -29,7 +48,11 @@ function UpdateManager({ showToast }) {
 
       if (meta && meta.rid != null) {
         setUpdateInfo(meta);
+        setChangelogText('');
         setShowDialog(true);
+        fetchUpdateChangelog(meta.version).then((section) => {
+          if (section) setChangelogText(section);
+        });
         if (!silent) showToast('Nova versão disponível: ' + meta.version);
       } else {
         if (!silent) showToast('Você já está na versão mais recente');
@@ -89,24 +112,33 @@ function UpdateManager({ showToast }) {
   };
 
   const installUpdate = async () => {
+    if (installing || !updateInfo || bytesRid == null) return;
+    setInstalling(true);
     try {
       const tauri = window.__TAURI__;
+      // No Windows o plugin lança o instalador e encerra o app; o instalador
+      // NSIS reinicia o app na nova versão (restart_after_install padrão).
       await tauri.core.invoke('plugin:updater|install', {
         updateRid: updateInfo.rid,
         bytesRid: bytesRid
       });
+      showToast('Atualização instalada. Reinicie o aplicativo.');
+      setInstalling(false);
     } catch (err) {
       console.error('Install error:', err);
+      setInstalling(false);
       showToast('Erro ao instalar atualização');
     }
   };
 
   const dismiss = () => {
+    if (downloading || installing) return;
     setShowDialog(false);
     setUpdateInfo(null);
     setDownloaded(false);
     setBytesRid(null);
     setDownloadProgress(0);
+    setChangelogText('');
     setError(null);
   };
 
@@ -141,12 +173,12 @@ function UpdateManager({ showToast }) {
           <p className="update-version">Versão {updateInfo.version}</p>
         </div>
 
-        {updateInfo.body && (
+        {(changelogText || updateInfo.body) && (
           <div className="update-notes">
             <div className="update-notes-label">Novidades</div>
             <div 
               className="update-notes-text"
-              dangerouslySetInnerHTML={{ __html: parseMarkdown(updateInfo.body) }}
+              dangerouslySetInnerHTML={{ __html: parseMarkdown(changelogText || updateInfo.body) }}
             />
           </div>
         )}
@@ -162,44 +194,43 @@ function UpdateManager({ showToast }) {
           </div>
         )}
 
-        {downloading && (
+        {(downloading || installing) && (
           <div className="update-progress">
             <div className="update-progress-bar">
-              <div className="update-progress-fill" style={{width: downloadProgress + '%'}} />
+              <div className="update-progress-fill" style={{width: (installing ? 100 : downloadProgress) + '%'}} />
             </div>
             <div className="update-progress-text">
-              {downloadProgress < 100 ? `Baixando... ${downloadProgress}%` : 'Preparando instalação...'}
+              {installing
+                ? 'Instalando e reiniciando...'
+                : downloadProgress < 100 ? `Baixando... ${downloadProgress}%` : 'Preparando instalação...'}
             </div>
           </div>
         )}
 
-        <div className="update-actions">
-          {!downloading && !downloaded && (
-            <>
-              <button className="btn btn-secondary" onClick={dismiss}>
-                Depois
-              </button>
-              <button className="btn btn-primary" onClick={downloadUpdate}>
-                Baixar Atualização
-              </button>
-            </>
-          )}
-          {downloading && (
-            <button className="btn btn-secondary" disabled>
-              Baixando...
-            </button>
-          )}
-          {downloaded && (
-            <>
-              <button className="btn btn-secondary" onClick={dismiss}>
-                Depois
-              </button>
-              <button className="btn btn-primary" onClick={installUpdate}>
-                Reiniciar e Instalar
-              </button>
-            </>
-          )}
-        </div>
+        {!downloading && !installing && (
+          <div className="update-actions">
+            {!downloaded && (
+              <>
+                <button className="btn btn-secondary" onClick={dismiss}>
+                  Depois
+                </button>
+                <button className="btn btn-primary" onClick={downloadUpdate}>
+                  Baixar Atualização
+                </button>
+              </>
+            )}
+            {downloaded && (
+              <>
+                <button className="btn btn-secondary" onClick={dismiss}>
+                  Depois
+                </button>
+                <button className="btn btn-primary" onClick={installUpdate}>
+                  Reiniciar e Instalar
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

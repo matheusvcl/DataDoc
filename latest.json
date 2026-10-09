@@ -1,10 +1,10 @@
 {
   "version": "0.1.97-beta",
   "notes": "Corrigido fluxo de atualização, importação CSV/PJ, validações de CNPJ/telefone/e-mail, truncamento de nome, estado em UF, XSS no changelog e diversas correções de UX.",
-  "pub_date": "2026-10-09T01:32:36Z",
+  "pub_date": "2026-10-09T02:29:52Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "placeholder",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReXYwZThSd3I0eXZwOGtTdXlEc29BYXBkYm4yTVlvdFdPbG5lNUJPbW1jemdMM1NpSXRTb3RFTTNsMzhzYjhwQmVZQjFBcyttQ3BZTTJWL0JKTjRwNmY2RTBCQWMrZkF3PQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxNTEyOTE4CWZpbGU6RGF0YURvY18wLjEuOTctYmV0YV94NjQtc2V0dXAuZXhlCnNtOUVFWSt2UjdFUm5jQjRzMEtyNi8xRDZraWZJbnZhS0RaMTBvU0t5TEEvOWZUMnZRQnhHSkE2M013Nmcwdm5SdkI5V24xS21ranBTVVlneENBd0RBPT0K",
       "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.1.97-beta/DataDoc_0.1.97-beta_x64-setup.exe"
     }
   }

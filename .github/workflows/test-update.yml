@@ -93,15 +93,15 @@ jobs:
           script: |
             const prefix = process.env.CACHE_PREFIX;
             const current = process.env.CACHE_CURRENT;
-            const { data } = await github.rest.actions.listActionsCachesForRepo({
+            const caches = await github.paginate('GET /repos/{owner}/{repo}/actions/caches', {
               owner: context.repo.owner, repo: context.repo.repo, per_page: 100
             });
             // inclui os caches legados do swatinem/rust-cache (v0-rust-*)
-            const antigos = data.actions_caches.filter(c =>
+            const antigos = caches.filter(c =>
               (c.key.startsWith(prefix) || c.key.startsWith('v0-rust-')) && c.key !== current
             );
             for (const c of antigos) {
-              await github.rest.actions.deleteActionsCacheByKey({ owner: context.repo.owner, repo: context.repo.repo, key: c.key });
+              await github.request('DELETE /repos/{owner}/{repo}/actions/caches', { owner: context.repo.owner, repo: context.repo.repo, key: c.key });
               core.info(`Cache antigo deletado: ${c.key}`);
             }
             core.info(`${antigos.length} cache(s) antigo(s) removido(s); mantido: ${current}`);

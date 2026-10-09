@@ -58,7 +58,7 @@ jobs:
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         with:
           tagName: v${{ inputs.test_version }}
@@ -121,7 +121,16 @@ jobs:
           fi
           echo "Installer: $INSTALLER"
           
+          # (o CLI atual exige --private-key-path; o env sozinho nao basta)
+          KEY_FILE="$RUNNER_TEMP/tauri.key"
+          printf '%s' "$TAURI_SIGNING_PRIVATE_KEY" > "$KEY_FILE.raw"
+          if base64 -d "$KEY_FILE.raw" > "$KEY_FILE" 2>/dev/null && grep -q "untrusted comment" "$KEY_FILE"; then
+            echo "Chave decodificada (base64)"
+          else
+            cp "$KEY_FILE.raw" "$KEY_FILE"
+          fi
           npx @tauri-apps/cli@latest signer sign \
+            --private-key-path "$KEY_FILE" \
             -p "" \
             "$INSTALLER"
           
@@ -171,7 +180,7 @@ jobs:
             --clobber
           echo "latest.json uploaded to release"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
 
       - name: Push latest.json to dev branch
@@ -194,7 +203,7 @@ jobs:
           git commit -m "chore: atualizar latest.json para v${{ inputs.test_version }}"
           git push origin HEAD:refs/heads/dev
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Upload test installer
         uses: actions/upload-artifact@v6
@@ -262,7 +271,7 @@ jobs:
           RELEASE_URL="https://api.github.com/repos/matheusvcl/DataDoc/releases/tags/v${{ inputs.test_version }}"
           echo "Fetching: $RELEASE_URL"
 
-          ASSETS=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "$RELEASE_URL" | node -e "
+          ASSETS=$(curl -s -H "Authorization: token ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}" "$RELEASE_URL" | node -e "
             const data = JSON.parse(require('fs').readFileSync('/dev/stdin', 'utf8'));
             if (data.assets) {
               data.assets.forEach(a => {

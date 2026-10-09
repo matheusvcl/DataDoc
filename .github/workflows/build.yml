@@ -206,7 +206,7 @@ jobs:
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         with:
           tagName: ${{ github.ref_name }}
@@ -263,7 +263,16 @@ jobs:
           echo "Installer: $INSTALLER"
           
           # Sign the installer to get the updater signature
+          # (o CLI atual exige --private-key-path; o env sozinho nao basta)
+          KEY_FILE="$RUNNER_TEMP/tauri.key"
+          printf '%s' "$TAURI_SIGNING_PRIVATE_KEY" > "$KEY_FILE.raw"
+          if base64 -d "$KEY_FILE.raw" > "$KEY_FILE" 2>/dev/null && grep -q "untrusted comment" "$KEY_FILE"; then
+            echo "Chave decodificada (base64)"
+          else
+            cp "$KEY_FILE.raw" "$KEY_FILE"
+          fi
           npx @tauri-apps/cli@latest signer sign \
+            --private-key-path "$KEY_FILE" \
             -p "" \
             "$INSTALLER"
           
@@ -320,7 +329,7 @@ jobs:
             --clobber
           echo "latest.json uploaded to release"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
 
       - name: Push latest.json to dev branch
@@ -343,7 +352,7 @@ jobs:
           git commit -m "chore: atualizar latest.json para ${{ github.ref_name }}"
           git push origin HEAD:refs/heads/dev
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6

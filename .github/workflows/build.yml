@@ -104,7 +104,7 @@ jobs:
             });
             const antigos = caches.filter(c => c.key.startsWith(prefix) && c.key !== current);
             for (const c of antigos) {
-              await github.request('DELETE /repos/{owner}/{repo}/actions/caches', { owner: context.repo.owner, repo: context.repo.repo, key: c.key });
+              await github.request('DELETE /repos/{owner}/{repo}/actions/caches{?key}', { owner: context.repo.owner, repo: context.repo.repo, key: c.key });
               core.info(`Cache antigo deletado: ${c.key}`);
             }
             core.info(`${antigos.length} cache(s) antigo(s) removido(s); mantido: ${current}`);
@@ -251,7 +251,7 @@ jobs:
             });
             const antigos = caches.filter(c => c.key.startsWith(prefix) && c.key !== current);
             for (const c of antigos) {
-              await github.request('DELETE /repos/{owner}/{repo}/actions/caches', { owner: context.repo.owner, repo: context.repo.repo, key: c.key });
+              await github.request('DELETE /repos/{owner}/{repo}/actions/caches{?key}', { owner: context.repo.owner, repo: context.repo.repo, key: c.key });
               core.info(`Cache antigo deletado: ${c.key}`);
             }
             core.info(`${antigos.length} cache(s) antigo(s) removido(s); mantido: ${current}`);

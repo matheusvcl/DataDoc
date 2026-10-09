@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   build-test:
@@ -27,10 +28,17 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
+      # Ciclo de cache: restaura o anterior -> usa -> salva o novo -> deleta os antigos
+      - name: Restaurar cache (anterior)
+        uses: actions/cache/restore@v5
         with:
-          workspaces: './tauri -> target'
+          path: |
+            tauri/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: rust-test-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            rust-test-${{ runner.os }}-
 
       - name: Set test version
         shell: bash
@@ -45,13 +53,7 @@ jobs:
 
       - name: Prepare frontend
         shell: bash
-        run: |
-          mkdir -p dist
-          cp index.html dist/
-          cp -r css dist/
-          cp -r js dist/
-          cp favicon.png dist/
-          if [ -d assets ]; then cp -r assets dist/; fi
+        run: node scripts/build.js
 
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v1
@@ -70,6 +72,39 @@ jobs:
           releaseDraft: false
           prerelease: true
           updaterJsonPreferNsis: true
+
+      - name: Salvar cache (novo)
+        if: success()
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            tauri/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: rust-test-${{ runner.os }}-${{ github.run_id }}
+
+      - name: Deletar caches antigos
+        if: success()
+        uses: actions/github-script@v7
+        env:
+          CACHE_PREFIX: rust-test-${{ runner.os }}-
+          CACHE_CURRENT: rust-test-${{ runner.os }}-${{ github.run_id }}
+        with:
+          script: |
+            const prefix = process.env.CACHE_PREFIX;
+            const current = process.env.CACHE_CURRENT;
+            const { data } = await github.rest.actions.listActionsCachesForRepo({
+              owner: context.repo.owner, repo: context.repo.repo, per_page: 100
+            });
+            // inclui os caches legados do swatinem/rust-cache (v0-rust-*)
+            const antigos = data.actions_caches.filter(c =>
+              (c.key.startsWith(prefix) || c.key.startsWith('v0-rust-')) && c.key !== current
+            );
+            for (const c of antigos) {
+              await github.rest.actions.deleteActionsCacheByKey({ owner: context.repo.owner, repo: context.repo.repo, key: c.key });
+              core.info(`Cache antigo deletado: ${c.key}`);
+            }
+            core.info(`${antigos.length} cache(s) antigo(s) removido(s); mantido: ${current}`);
 
       - name: Setup Node.js
         uses: actions/setup-node@v5

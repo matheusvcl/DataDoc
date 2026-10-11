@@ -121,17 +121,10 @@ jobs:
           fi
           echo "Installer: $INSTALLER"
           
-          # (o CLI lê TAURI_SIGNING_PRIVATE_KEY e preenche --private-key automaticamente,
-          #  conflitando com --private-key-path; por isso removemos o env só para o npx)
-          KEY_FILE="$RUNNER_TEMP/tauri.key"
-          printf '%s' "$TAURI_SIGNING_PRIVATE_KEY" > "$KEY_FILE.raw"
-          if base64 -d "$KEY_FILE.raw" > "$KEY_FILE" 2>/dev/null && grep -q "untrusted comment" "$KEY_FILE"; then
-            echo "Chave decodificada (base64)"
-          else
-            cp "$KEY_FILE.raw" "$KEY_FILE"
-          fi
-          env -u TAURI_SIGNING_PRIVATE_KEY npx @tauri-apps/cli@latest signer sign \
-            --private-key-path "$KEY_FILE" \
+          # (o segredo já é a chave minisign em base64 — formato exato que o CLI espera
+          #  em TAURI_SIGNING_PRIVATE_KEY; decodificar antes quebrava o parse da chave)
+          npx @tauri-apps/cli@latest signer sign \
+            --private-key "$TAURI_SIGNING_PRIVATE_KEY" \
             -p "" \
             "$INSTALLER"
           

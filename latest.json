@@ -1,11 +1,11 @@
 {
-  "version": "0.1.99-beta",
-  "notes": "Changelog sem espaçamento excessivo, popup de atualização com a changelog completa da versão, barra de progresso durante o download e instalação com reinício; correção da assinatura do instalador no CI.",
-  "pub_date": "2026-10-09T17:10:00Z",
+  "version": "0.2.0-beta",
+  "notes": "Correção da assinatura do instalador no fluxo de release (chave em base64 direto ao signer sign), permitindo gerar o .sig e o latest.json — atualizações pelo app voltam a funcionar.",
+  "pub_date": "2026-10-12T15:57:18Z",
   "platforms": {
     "windows-x86_64": {
       "signature": "placeholder",
-      "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.1.99-beta/DataDoc_0.1.99-beta_x64-setup.exe"
+      "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.2.0-beta/DataDoc_0.2.0-beta_x64-setup.exe"
     }
   }
 }

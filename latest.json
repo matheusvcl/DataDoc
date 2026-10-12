@@ -1,11 +1,11 @@
 {
-  "version": "0.2.1-beta",
-  "notes": "### Melhorado\n\n- CI: mensagem do commit automático do `latest.json` padronizada como `chore: atualiza latest.json para vX.Y.Z`",
-  "pub_date": "2026-10-12T16:31:26Z",
+  "version": "0.2.2-beta",
+  "notes": "### Adicionado\n\n- Re-verificação automática de atualização a cada 15 minutos: o popup aparece sozinho assim que o release termina, mesmo com o app aberto desde antes\n\n### Corrigido\n\n- Atualização só é anunciada quando o workflow do release termina por completo — o `latest.json` do updater passou a ser publicado pelo CI apenas no fim, com instalador e assinatura já prontos (elimina o popup cedo e o \"Erro ao baixar atualização\" causado pela assinatura provisória no manifesto)\n- Download que ficava falhando para sempre depois de um erro: o app re-verifica e descarta a assinatura congelada da checagem anterior, então o próximo clique em \"Baixar Atualização\" usa dados frescos\n- Popup de atualização não reabre sozinho para uma versão que já foi adiada em \"Depois\"\n\n### Melhorado\n\n- Binário do aplicativo compilado como `DataDoc.exe` em vez de `app.exe`",
+  "pub_date": "2026-10-12T17:24:33Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReXYwZThSd3I0eXBBTkZES3pqREl6QnNoMmh5S2RhQ1pJbFJQZWhCa1VWa2hEYzBoRTdHakpvZmZCVUhjUlh3b1NxaVRTU2x1dU9NbmV1Qkd1SFZSQS9pdjJKamVKQ2drPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxODIyNjg1CWZpbGU6RGF0YURvY18wLjIuMS1iZXRhX3g2NC1zZXR1cC5leGUKeHVhbkJ2bDFrV0JMVkR1NTJLMFYwS0FtWTlOTzdkckFUNVcwOG9FZFRZeWdtbWppTjRSK2xOV1Vad3lqL3NMZjZHcHNmOHZhbmZLNVBhKzd6VDhYRFE9PQo=",
-      "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.2.1-beta/DataDoc_0.2.1-beta_x64-setup.exe"
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReXYwZThSd3I0eXJ5SzlROGV6d3E0L2hmQUp5M0dqZ2NIYnl3NGdSaTR5OWpFc0VlbDc2c1pwNmtkVk5uM1ZiRDhScFptT3RsSjZyT0JmaDFBbDl1NWdUWVNCZnVQWndVPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxODI1ODczCWZpbGU6RGF0YURvY18wLjIuMi1iZXRhX3g2NC1zZXR1cC5leGUKbFZEV0Y5d3VVWG5vbDlmVDkyaEtlMXRxcG1qaGgveG9paUx4bGwzSVpqLy9mYlVJdGtLeXcrVlRhS1Y1SjVXZnp5T25Jb0p4VkdBMWs0c1B0MGNMRHc9PQo=",
+      "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.2.2-beta/DataDoc_0.2.2-beta_x64-setup.exe"
     }
   }
 }

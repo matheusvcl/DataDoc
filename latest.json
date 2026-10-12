@@ -1,10 +1,10 @@
 {
   "version": "0.2.0-beta",
-  "notes": "Correção da assinatura do instalador no fluxo de release (chave em base64 direto ao signer sign), permitindo gerar o .sig e o latest.json — atualizações pelo app voltam a funcionar.",
-  "pub_date": "2026-10-12T15:57:18Z",
+  "notes": "### Corrigido\n\n- CI: assinatura do instalador no fluxo de release — a chave agora é passada em base64 direto ao `signer sign` (é o formato que o CLI espera), sem decodificar antes; o `.sig` e o `latest.json` voltam a ser gerados e as atualizações pelo app funcionam de ponta a ponta",
+  "pub_date": "2026-10-12T16:10:53Z",
   "platforms": {
     "windows-x86_64": {
-      "signature": "placeholder",
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVReXYwZThSd3I0eXRNYWxORXBVOWxvejIrdW9hbjkyN0xxSnF2WXJaYjIrSVRLMVRiVjhhMTl1U1NTS01KRGZ1NVpwaGlNNEQ4V1dkeG10YmVpZmlaWU5ZbjQ3MDd4MGdRPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkxODIxNDUzCWZpbGU6RGF0YURvY18wLjIuMC1iZXRhX3g2NC1zZXR1cC5leGUKM3JUT3pLalYwRDNjTktMWnZpeWFuQzQ0Zm5KRk5tVW9ITWkrbyt1aWpuNGpMS1lUcW9yaFpLV2tzUWhRRWxNejdMK1UwUmJ6QXBmelozVERTRElaQmc9PQo=",
       "url": "https://github.com/matheusvcl/DataDoc/releases/download/v0.2.0-beta/DataDoc_0.2.0-beta_x64-setup.exe"
     }
   }

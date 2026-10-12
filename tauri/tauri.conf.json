@@ -3,6 +3,7 @@
   "productName": "DataDoc",
   "version": "0.2.1-beta",
   "identifier": "com.datadoc.desktop",
+  "mainBinaryName": "DataDoc",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:4000"
@@ -28,7 +29,6 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
-    "mainBinaryName": "DataDoc",
     "publisher": "DataDoc",
     "copyright": "© DataDoc",
     "icon": [

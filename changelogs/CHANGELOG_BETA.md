@@ -1,15 +1,12 @@
-## [v0.2.2-beta] - 12/10/2026
-
-### Adicionado
-
-- Re-verificação automática de atualização a cada 15 minutos: o popup aparece sozinho assim que o release termina, mesmo com o app aberto desde antes
+## [v0.2.3-beta] - 12/10/2026
 
 ### Corrigido
 
-- Atualização só é anunciada quando o workflow do release termina por completo — o `latest.json` do updater passou a ser publicado pelo CI apenas no fim, com instalador e assinatura já prontos (elimina o popup cedo e o "Erro ao baixar atualização" causado pela assinatura provisória no manifesto)
-- Download que ficava falhando para sempre depois de um erro: o app re-verifica e descarta a assinatura congelada da checagem anterior, então o próximo clique em "Baixar Atualização" usa dados frescos
-- Popup de atualização não reabre sozinho para uma versão que já foi adiada em "Depois"
+- Ícone do aplicativo sem artefatos coloridos nos tamanhos pequenos — o Gerenciador de Tarefas e a barra de tarefas exibiam pixels fora de lugar
+- Botão ativo do toggle "Pessoa Física / Pessoa Jurídica" invisível no modo escuro (fundo igual ao do container)
+- Barra de rolagem do popup de atualização com aparência quebrada: agora é uma thumb flutuante e arredondada, sem trilho, com respiro para o texto não encostar nela
 
 ### Melhorado
 
-- Binário do aplicativo compilado como `DataDoc.exe` em vez de `app.exe`
+- Formulários de Cadastro e Empresa mais largos (grid de 840px para 960px) e campo "Estado" sem placeholder cortado
+- Animações de entrada das telas e do overlay dos dialogs, com respeito a `prefers-reduced-motion`

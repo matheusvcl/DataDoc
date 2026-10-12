@@ -152,7 +152,7 @@ function EmpresaScreen({ clientData, onBack, onContinue, showToast }) {
 
           <div className="form-group col-1">
             <label className="form-label" htmlFor="emp-estado">Estado</label>
-            <CustomSelect id="emp-estado" value={form.estado} onChange={setEstado} options={stateNames} placeholder="Selecione o estado" />
+            <CustomSelect id="emp-estado" value={form.estado} onChange={setEstado} options={stateNames} placeholder="Selecione" />
           </div>
 
           <div className="form-group col-2">

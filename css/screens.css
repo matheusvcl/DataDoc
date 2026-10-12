@@ -1081,11 +1081,11 @@
 }
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb {
-  background: #333333;
+  background: rgba(255, 255, 255, 0.18);
 }
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-  background: #444444;
+  background: rgba(255, 255, 255, 0.3);
 }
 
 [data-theme="dark"] ::selection {
@@ -1157,6 +1157,7 @@
   line-height: 1.5;
   max-height: 220px;
   overflow-y: auto;
+  padding-right: 10px;
 }
 
 .update-notes-text .md-heading {

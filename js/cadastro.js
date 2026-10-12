@@ -227,7 +227,7 @@ function CadastroScreen({ onPreview, onGoEmpresa, editData, onClearEdit, showToa
 
           <div className="form-group col-1">
             <label className="form-label" htmlFor="input-estado">Estado</label>
-            <CustomSelect id="input-estado" value={form.estado} onChange={setEstado} options={stateNames} placeholder="Selecione o estado" />
+            <CustomSelect id="input-estado" value={form.estado} onChange={setEstado} options={stateNames} placeholder="Selecione" />
           </div>
 
           <div className="form-group col-2">

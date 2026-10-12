@@ -317,8 +317,43 @@ tbody tr:last-child td {
   color: var(--muted);
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
+/* Scrollbar: thumb flutuante estilo desktop, sem trilho */
+::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: oklch(0.82 0.008 70); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: oklch(0.72 0.008 70); }
+::-webkit-scrollbar-thumb {
+  background: oklch(0.72 0.008 70 / 0.55);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.58 0.008 70 / 0.7);
+  background-clip: content-box;
+}
+::-webkit-scrollbar-corner { background: transparent; }
+
+/* Animações de entrada */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.main-content > * {
+  animation: pageIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dialog-overlay {
+  animation: overlayIn 0.18s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

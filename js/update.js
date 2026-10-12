@@ -1,4 +1,10 @@
 // Update System
+// O latest.json (endpoint do updater) só é publicado no dev quando o release
+// termina de compilar, assinar e subir os artefatos no CI — até lá o manifesto
+// antigo continua valendo. O app re-verifica periodicamente para perceber a
+// versão nova assim que o workflow terminar, sem depender de clique manual.
+const UPDATE_CHECK_INTERVAL_MS = 15 * 60 * 1000;
+
 function UpdateManager({ showToast }) {
   const [updateInfo, setUpdateInfo] = useState(null);
   const [checking, setChecking] = useState(false);
@@ -10,6 +16,7 @@ function UpdateManager({ showToast }) {
   const [changelogText, setChangelogText] = useState('');
   const [showDialog, setShowDialog] = useState(false);
   const [error, setError] = useState(null);
+  const dismissedVersionRef = useRef(null);
 
   // Changelog da versão disponível (dev/main + CHANGELOG_BETA.md/CHANGELOG.md),
   // com fallback para o body do release.
@@ -48,12 +55,17 @@ function UpdateManager({ showToast }) {
 
       if (meta && meta.rid != null) {
         setUpdateInfo(meta);
-        setChangelogText('');
-        setShowDialog(true);
-        fetchUpdateChangelog(meta.version).then((section) => {
-          if (section) setChangelogText(section);
-        });
-        if (!silent) showToast('Nova versão disponível: ' + meta.version);
+        // Na verificação automática não reabre o popup de uma versão que o
+        // usuário já adiou ("Depois"); na manual sempre mostra.
+        const adiada = silent && meta.version === dismissedVersionRef.current;
+        if (!adiada) {
+          setChangelogText('');
+          setShowDialog(true);
+          fetchUpdateChangelog(meta.version).then((section) => {
+            if (section) setChangelogText(section);
+          });
+          if (!silent) showToast('Nova versão disponível: ' + meta.version);
+        }
       } else {
         if (!silent) showToast('Você já está na versão mais recente');
       }
@@ -106,6 +118,10 @@ function UpdateManager({ showToast }) {
       console.error('Download error:', err);
       setError('Erro ao baixar atualização');
       showToast('Erro ao baixar atualização');
+      // O recurso do updater pode ter ficado defasado (ex.: o manifesto mudou
+      // depois do check e a assinatura congelada ficou velha). Re-verifica para
+      // o próximo clique em "Baixar Atualização" usar dados frescos.
+      checkForUpdates(true);
     }
 
     setDownloading(false);
@@ -133,6 +149,7 @@ function UpdateManager({ showToast }) {
 
   const dismiss = () => {
     if (downloading || installing) return;
+    if (updateInfo) dismissedVersionRef.current = updateInfo.version;
     setShowDialog(false);
     setUpdateInfo(null);
     setDownloaded(false);
@@ -148,8 +165,12 @@ function UpdateManager({ showToast }) {
   useEffect(() => {
     window.checkForUpdates = checkForUpdates;
     const timer = setTimeout(() => checkForUpdates(true), 3000);
+    // Re-verificação periódica: o popup aparece sozinho quando o release do
+    // workflow terminar, mesmo com o app aberto desde antes.
+    const interval = setInterval(() => checkForUpdates(true), UPDATE_CHECK_INTERVAL_MS);
     return () => {
       clearTimeout(timer);
+      clearInterval(interval);
       if (window.checkForUpdates === checkForUpdates) {
         delete window.checkForUpdates;
       }

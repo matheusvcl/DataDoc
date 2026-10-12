@@ -332,6 +332,10 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
 
       - name: Push latest.json to dev branch
+        # latest.json é gerado do zero aqui e só é publicado no fim do workflow,
+        # quando instalador, assinatura e release já estão prontos. Ele é de
+        # responsabilidade do bot: commits de release NÃO devem alterá-lo
+        # (um valor intermediário faria o updater do app baixar com erro).
         shell: bash
         run: |
           if [ ! -f latest.json ]; then

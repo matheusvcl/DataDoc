@@ -847,7 +847,7 @@
 }
 
 [data-theme="dark"] .person-type-btn.active {
-  background: var(--surface-hover);
+  background: #2f2f2f;
   color: var(--fg);
 }
 
